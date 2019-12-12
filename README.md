@@ -1,4 +1,4 @@
-# pudzu
+# pudzu-packages
 
 ## Summary
 

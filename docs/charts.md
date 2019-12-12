@@ -1,4 +1,4 @@
-# [pudzu-charts](charts.py)
+# [pudzu-charts](../pudzu/charts.py)
 
 ## Summary 
 Pillow-based charting.
@@ -14,42 +14,42 @@ Five chart types are currently supported: **bar charts**, **time charts**, **gri
 
 **generate_legend**: generate a chart category legend.
 
-![smurf etymology legend](images/chart_legend.png)
+![smurf etymology legend](charts/legend.jpg)
 
 ### Bar charts
 
 **bar_chart**: generate a bar chart; supports grouped, stacked and percentage stacked charts, as well as horizontal charts and flexible coloring and labeling.
 
-![uk elections bar chart](images/chart_elections.png)
+![us elections bar chart](charts/uspopular.jpg)
 
-![us elections bar chart](images/chart_uspopular.jpg)
+![flag hues bar chart](charts/flaghues.jpg)
 
 ### Time charts
 
 **time_chart**: generate a time chart; supports numeric and date timelines highlighting both ranges and events.
 
-![g7 time chart example](images/chart_g7.png)
+![g7 time chart example](charts/g7.jpg)
 
-![jerusalem time chart example](images/chart_jerusalem.jpg)
+![jerusalem time chart example](charts/jerusalem.jpg)
 
 ### Grid charts
 
-**grid_chart**: generate an image grid chart; essentially a convenient wrapper for `Image.from_array`.
+**grid_chart**: generate an image grid chart; supports grouping cells to generate Euler diagrams.
 
-![grid chart example](images/chart_periodic.png)
+![grid chart example](charts/periodic.jpg)
 
-![grid chart example](images/chart_markovtext.png)
+![grid chart example](charts/markovtext.jpg)
 
 ### Map charts
 
 **map_chart**: generate a map chart. Input is a map template with each region having a unique color. Regions can be named (see generate_name_csv), labelled (see generate_bbox_csv) and have overlays such as label arrows.
 
-![map chart example](images/chart_femaleleaders.png)
+![map chart example](charts/femaleleaders.jpg)
 
-![map chart example](images/chart_dishes.jpg)
+![map chart example](charts/dishes.jpg)
 
 ### Calendar charts
 
-**month_chart**: generate a calendar chart for a given month.
+**month_chart**: generate a calendar chart for a given month; supports non-Western calendars.
 
-![jerusalem time chart example](images/chart_trump.jpg)
+![jerusalem time chart example](charts/trump.jpg)

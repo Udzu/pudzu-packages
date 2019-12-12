@@ -1,4 +1,4 @@
-# [pudzu-dates](dates.py)
+# [pudzu-dates](../pudzu/dates.py)
 
 ## Summary 
 Date classes supporting flexible calendars, date deltas and ranges.
