@@ -22,16 +22,16 @@ setup(name='pudzu-dates', version=VERSION, packages=['pudzu.dates'],
       description='Date classes supporting flexible calendars, date deltas and ranges.',
       keywords='pudzu date calendar',
       url=URL, author=AUTHOR, author_email=AUTHOR_EMAIL, license=LICENSE, classifiers=CLASSIFIERS,
-      install_requires=['pudzu-utils'], python_requires=PYTHON_REQUIRES)
+      install_requires=[f'pudzu-utils>={VERSION}'], python_requires=PYTHON_REQUIRES)
 
 setup(name='pudzu-pillar', version=VERSION, packages=['pudzu.pillar'],
       description='Various imaging utilities, monkey-patched onto Pillow.',
       keywords='pudzu imaging pillow',
       url=URL, author=AUTHOR, author_email=AUTHOR_EMAIL, license=LICENSE, classifiers=CLASSIFIERS,
-      install_requires=['pudzu-utils', 'Pillow', 'numpy'], python_requires=PYTHON_REQUIRES)
+      install_requires=[f'pudzu-utils>={VERSION}', 'Pillow', 'numpy'], python_requires=PYTHON_REQUIRES)
 
 setup(name='pudzu-charts', version=VERSION, packages=['pudzu.charts'],
       description='Pillow-based charting tools.',
       keywords='pudzu charts pillow',
       url=URL, author=AUTHOR, author_email=AUTHOR_EMAIL, license=LICENSE, classifiers=CLASSIFIERS,
-      install_requires=['pudzu-pillar', 'pudzu-dates', 'pandas'], python_requires=PYTHON_REQUIRES)
+      install_requires=[f'pudzu-pillar>={VERSION}', f'pudzu-dates>={VERSION}', 'pandas'], python_requires=PYTHON_REQUIRES)
