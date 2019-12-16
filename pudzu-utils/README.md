@@ -1,4 +1,4 @@
-# [pudzu-utils](../pudzu/utils.py)
+# [pudzu-utils](pudzu/utils/utils.py)
 
 ## Summary 
 Various utility functions and data structures used in the other modules.

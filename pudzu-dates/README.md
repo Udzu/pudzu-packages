@@ -1,10 +1,10 @@
-# [pudzu-dates](../pudzu/dates.py)
+# [pudzu-dates](pudzu/dates/dates.py)
 
 ## Summary 
 Date classes supporting flexible calendars, date deltas and ranges.
  
 ## Dependencies
-*Required*: [toolz](http://toolz.readthedocs.io/en/latest/index.html), [pudzu-utils](utils.md).
+*Required*: [toolz](http://toolz.readthedocs.io/en/latest/index.html), [pudzu-utils](../pudzu-utils/README.md).
 
 *Optional*: [convertdate](https://pypi.python.org/pypi/convertdate/) (for non-Western calendar support).
 
