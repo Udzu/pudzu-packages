@@ -1,10 +1,10 @@
-# [pudzu-pillar](../pudzu/pillar.py)
+# [pudzu-pillar](pudzu/pillar/README.py)
 
 ## Summary 
 Various Pillow utilities. These are monkey-patched on, allowing continued use of the Image.new factory function. Most have only been tested in RGB/RGBA modes and may not work in other modes. For full features and parameters, see docstrings.
  
 ## Dependencies
-*Required*: [pillow](http://pillow.readthedocs.io/en/4.2.x/index.html), [toolz](http://toolz.readthedocs.io/en/latest/index.html), [numpy](http://www.numpy.org/), [pudzu-utils](utils.md).
+*Required*: [pillow](http://pillow.readthedocs.io/en/4.2.x/index.html), [toolz](http://toolz.readthedocs.io/en/latest/index.html), [numpy](http://www.numpy.org/), [pudzu-utils](../pudzu-utils/README.md).
 
 *Optional*: [pyphen](http://pyphen.org/) (for text hyphenation), [requests](http://docs.python-requests.org/en/master/) (for HTTP request headers), [scipy](http://www.scipy.org/) (for Mask borders), [python-bidi](https://pypi.org/project/python-bidi/) (for bidirectional text rendering), [arabic-reshaper](https://github.com/mpcabd/python-arabic-reshaper) (for Arabic text rendering).
 
@@ -120,7 +120,7 @@ RGBA(red=0, green=128, blue=0, alpha=255)
 >> Image.from_gradient(cmap1, (100,20)).show()
 ```
 
-![alt](pillar/colormapgradient.png)
+![alt](images/colormapgradient.png)
 
 **SequenceColormap**: generate a colormap from a sequence of other colormaps, with optional spacing:
 
@@ -132,7 +132,7 @@ RGBA(red=0, green=128, blue=0, alpha=255)
 >> Image.from_gradient(cmap12, (100,20)).show()
 ```
 
-![alt](pillar/colormapcompound.png)
+![alt](images/colormapcompound.png)
 
 **ConstantColormap**/**PaletteColormap**: generate a colormap from either one or a sequence of constant colors. The latter can also be used as a discrete cycling colormap.
 
@@ -143,7 +143,7 @@ PaletteColormap(0%-43%=#008000ff, 43%-57%=#d43c69ff, 57%-100%=#4675caff)
 >> Image.from_gradient(cmap3, (100,20)).show()
 ```
 
-![alt](pillar/colormapconstant.png)
+![alt](images/colormapconstant.png)
 
 **BlendColormap**: generate a colormap blending between two other colormaps, with an optional blend function:
 
@@ -152,7 +152,7 @@ PaletteColormap(0%-43%=#008000ff, 43%-57%=#d43c69ff, 57%-100%=#4675caff)
 >> Image.from_gradient(cmapo12, (100,20)).show()
 ```
 
-![alt](pillar/colorblend.png)
+![alt](images/colorblend.png)
 
 **FunctionColormap**: generate a colormap from numpy-aware channel functions (or constants) mapping 0-1 to 0-1. Supports either RGBA or HSLA.
 
@@ -160,12 +160,12 @@ PaletteColormap(0%-43%=#008000ff, 43%-57%=#d43c69ff, 57%-100%=#4675caff)
 >> Image.from_gradient(FunctionColormap(lambda i:(np.sin(i*8*np.pi)+1)/2, identity, identity), (100,20)).show()
 ```
 
-![alt](pillar/colormapfunction.png)
+![alt](images/colormapfunction.png)
 
 ```python
 >> Image.from_gradient(FunctionColormap(identity, 1, 0.75, hsl=True), (100,20)).show()
 ```
-![alt](pillar/colormapfunction2.png)
+![alt](images/colormapfunction2.png)
 
 
 ### ImageColor
@@ -217,12 +217,12 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 **Image.from_url**: create an image from a URL. **Image.from_url_with_cache** does the same but uses a file cache (with a default filename structure of cache_directory/hostname/hash_of_path.extension, plus an accompanying .source file containing the URL).
 
 ```python
->> Image.from_url('https://assets-cdn.github.com/pillar/modules/logos_page/Octocat.png')
-[10:05:03] pillar:DEBUG - Reading image from https://assets-cdn.github.com/pillar/modules/logos_page/Octocat.png
->> Image.from_url_with_cache('https://assets-cdn.github.com/pillar/modules/logos_page/Octocat.png')
-[10:05:27] pillar:DEBUG - Reading image from https://assets-cdn.github.com/pillar/modules/logos_page/Octocat.png
+>> Image.from_url('https://assets-cdn.github.com/images/modules/logos_page/Octocat.png')
+[10:05:03] pillar:DEBUG - Reading image from https://assets-cdn.github.com/images/modules/logos_page/Octocat.png
+>> Image.from_url_with_cache('https://assets-cdn.github.com/images/modules/logos_page/Octocat.png')
+[10:05:27] pillar:DEBUG - Reading image from https://assets-cdn.github.com/images/modules/logos_page/Octocat.png
 [10:05:28] pillar:DEBUG - Saving cached image to cache\assets-cdn.github.com\d4b25973fbbe302e1b486000f43aa25b9c61f9bf.png
->> Image.from_url_with_cache('https://assets-cdn.github.com/pillar/modules/logos_page/Octocat.png')
+>> Image.from_url_with_cache('https://assets-cdn.github.com/images/modules/logos_page/Octocat.png')
 [10:05:38] pillar:DEBUG - Loading cached image at cache\assets-cdn.github.com\d4b25973fbbe302e1b486000f43aa25b9c61f9bf.png
 ```
 
@@ -232,14 +232,14 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> Image.from_text("The rain", arial(16, bold=True), fg="white", bg="#1f5774", padding=10).show()
 ```
 
-![alt](pillar/fromtext1.png)
+![alt](images/fromtext1.png)
 
 ```python
 >> Image.from_text("dedicated to the proposition that all men are created equal", arial(16),
                    fg="white", bg="black", max_width=100, align="center", padding=5).show()
 ```
 
-![alt](pillar/fromtext2.png)
+![alt](images/fromtext2.png)
 
 ```python
 >> Image.from_text("dedicated to the proposition that all men are created equal", arial(16), 
@@ -247,7 +247,7 @@ RGBA(red=187, green=188, blue=0, alpha=255)
                    hyphenator=language_hyphenator("en_EN")).show()
 ```
 
-![alt](pillar/fromtext3.png)
+![alt](images/fromtext3.png)
 
 **Image.from_multitext**: creates an image from multiple texts, fonts and colors, correctly lining up baselines. Only supports single-line texts; for multline texts, combine images with Image.from_column (with equal_heights set to True). Supports underlining and strikethrough.
 
@@ -257,14 +257,14 @@ RGBA(red=187, green=188, blue=0, alpha=255)
                         ["white", "red", "white", "white"], "#1f5774").show()
 ```
 
-![alt](pillar/frommultitext.png)
+![alt](images/frommultitext.png)
 
 ```python
 >> Image.from_multitext(("Underline", " and ", "strikethrough"), arial(24), "white", "#1f5774",
                         underlines=(2,0,0), strikethroughs=(0,0,1)).show()
 ```
 
-![alt](pillar/frommultitext2.png)
+![alt](images/frommultitext2.png)
 
 **Image.from_markup**: creates an image from simple text markup and a font family. Supported attributes are: \*\*bold\*\*, //italics//, \_\_underline\_\_, \~\~strikethrough\~\~ and \[\[color\]\]. Attributes can be nested or escaped with backslashes.
 
@@ -273,7 +273,7 @@ RGBA(red=187, green=188, blue=0, alpha=255)
                      partial(arial, 16),max_width=300).show()
 ```
 
-![alt](pillar/frommarkup.png)
+![alt](images/frommarkup.png)
 
 **Image.from_text_bounded**: like from_text but with a maximum image size, maximum font size and a size-to-font function. Successively tries smaller fonts until the result would fit in the bounding box. Similarly, **Image.from_markup_bounded**. For generic images, there is also **Image.generate_bounded**.
 
@@ -281,7 +281,7 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> Image.from_text_bounded("The rain in Spain", (200, 200), 48, arial, fg="white", bg="#1f5774", padding=10).show()
 ```
 
-![alt](pillar/fromtextbounded.png)
+![alt](images/fromtextbounded.png)
 
 **Image.from_text_justified**: like from_text_bounded, but generates each line of text separately to fit in the given width.
 
@@ -289,7 +289,7 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> Image.from_text_justified("The rain in Spain stays mainly in\nthe plain", 200, 100, arial, fg="white", bg="#1f5774", padding=10).show()
 ```
 
-![alt](pillar/fromtextjustified.png)
+![alt](images/fromtextjustified.png)
 
 **Image.from_array**: create an image from an array of images. Similarly, **Image.from_row** and **Image.from_column** create images form a list of images.
 
@@ -298,7 +298,7 @@ RGBA(red=187, green=188, blue=0, alpha=255)
                     padding=(5,2), xalign=(0,0.5,1), bg="#1f5774").show()
 ```                    
 
-![alt](pillar/fromarray1.png)
+![alt](images/fromarray1.png)
 
 **Image.from_pattern**: create an image from a background pattern, either scaled or tiled. Similarly, **Image.from_vertical_pattern** and **Image.from_horizontal_pattern** automatically scale to the image width or height.
 
@@ -307,19 +307,19 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> Image.from_pattern(flag.resize_fixed_aspect(width=50), (150,150)).show()
 ```
 
-![alt](pillar/frompattern1.png)
+![alt](images/frompattern1.png)
 
 ```python
 >> Image.from_vertical_pattern(flag, (150,150)).show()
 ```
 
-![alt](pillar/frompattern2.png)
+![alt](images/frompattern2.png)
 
 ```python
 >> Image.from_horizontal_pattern(flag, (150,150), align=0.5).show()
 ```
 
-![alt](pillar/frompattern3.png)
+![alt](images/frompattern3.png)
 
 **Image.from_gradient**: create a gradient image using a matplotlib-style color map. Requires numpy. Also see colormaps above.
 
@@ -327,13 +327,13 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> Image.from_gradient(cmap2, (100,100)).show()
 ```
 
-![alt](pillar/fromgradient1.png)
+![alt](images/fromgradient1.png)
 
 ```python
 >> Image.from_gradient(cmap2, (100,100), direction=(-1,1)).show()
 ```
 
-![alt](pillar/fromgradient2.png)
+![alt](images/fromgradient2.png)
 
 **Image.EMPTY_IMAGE**: an empty "RGBA" image.
 
@@ -351,7 +351,7 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> base.overlay(Image.from_text("red", arial(24), "white"), (0,0), copy=True).show()
 ```
 
-![alt](pillar/overlay1.png)
+![alt](images/overlay1.png)
 
 **Image.Image.place**: overlay an image at the given alignment and padding.
 
@@ -360,13 +360,13 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> base.place(img).show()
 ```
 
-![alt](pillar/place1.png)
+![alt](images/place1.png)
 
 ```python
 >> base.place(img, align=(0,1), padding=5).show()
 ```
 
-![alt](pillar/place2.png)
+![alt](images/place2.png)
 
 **Image.Image.pin**: pin an image on another, expanding the base image if necessary.
 
@@ -374,13 +374,13 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> base.pin(img, (0,30), bg="black").show()
 ```
 
-![alt](pillar/pin1.png)
+![alt](images/pin1.png)
 
 ```python
 >> base.pin(img, (0,30), align=(1,0.5), bg="black").show()
 ```
 
-![alt](pillar/pin2.png)
+![alt](images/pin2.png)
 
 **Image.Image.pad**: pad an image. Similarly, **Image.Image.trim** trims an image.
 
@@ -388,13 +388,13 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> base.pad(5, "grey").show()
 ```
 
-![alt](pillar/pad1.png)
+![alt](images/pad1.png)
 
 ```python
 >> base.pad((10,10,0,0), "grey").show()
 ```
 
-![alt](pillar/pad2.png)
+![alt](images/pad2.png)
 
 **Image.Image.resize**: monkey-patched to handle zero-width/height sizes and default to LANCZOS resampling.
 
@@ -409,14 +409,14 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> flag.resize_fixed_aspect(scale=0.25).show()
 ```
 
-![alt](pillar/resizefixed1.png)
+![alt](images/resizefixed1.png)
 
 ```python
 >> smallflag = flag.resize_fixed_aspect(width=100)
 >> smallflag.show()
 ```
 
-![alt](pillar/resizefixed2.png)
+![alt](images/resizefixed2.png)
 
 **Image.Image.pad_to_aspect**: pad an image so that it has the given aspect ratio (specified by one or two numbers).
 
@@ -424,13 +424,13 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> smallflag.pad_to_aspect(1, bg="grey").show()
 ```
 
-![alt](pillar/padtoaspect1.png)
+![alt](images/padtoaspect1.png)
 
 ```python
 >> smallflag.pad_to_aspect(800, 600, align=0).show()
 ```
 
-![alt](pillar/padtoaspect2.png)
+![alt](images/padtoaspect2.png)
 
 **Image.Image.padded_resize**: resize an image, after first padding it to the right aspect ratio.
 
@@ -438,7 +438,7 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> flag.padded_resize((100,100), bg="grey").show()
 ```
 
-![alt](pillar/padtoaspect1.png)
+![alt](images/padtoaspect1.png)
 
 **Image.Image.crop_to_aspect**: crop an image so that it has the given aspect ratio (specified by one or two numbers).
 
@@ -446,13 +446,13 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> smallflag.crop_to_aspect(1).show()
 ```
 
-![alt](pillar/croptoaspect1.png)
+![alt](images/croptoaspect1.png)
 
 ```python
 >> smallflag.crop_to_aspect(800, 600, align=0).show()
 ```
 
-![alt](pillar/croptoaspect2.png)
+![alt](images/croptoaspect2.png)
 
 **Image.Image.cropped_resize**: resize an image, after first cropping it to the right aspect ratio.
 
@@ -460,7 +460,7 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> flag.cropped_resize((100,100)).show()
 ```
 
-![alt](pillar/croppedresize.png)
+![alt](images/croppedresize.png)
 
 **Image.Image.blend**: blends two images together, using sRGB gamma correction by default. Similarly, **ImageColor.brighten** and **ImageColor.darken** blend with white and black, while preserving alpha. Requires numpy.
 
@@ -470,7 +470,7 @@ RGBA(red=187, green=188, blue=0, alpha=255)
                     smallflag.brighten(0.5)]).show()
 ```
 
-![alt](pillar/blend.png)
+![alt](images/blend.png)
 
 **Image.Image.alpha_blend**: alpha blend two images together. Same as alpha_composite, but supports sRGB gamma correction (and is a fair bit slower).
 
@@ -482,12 +482,12 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> base.replace_color("blue", "grey").place(img.replace_color("blue", "red", ignore_alpha=True)).show()
 ```
 
-![alt](pillar/colorreplace.png)
+![alt](images/colorreplace.png)
 
 ```python
 >> base.replace_color("blue", flag.resize_fixed_aspect(width=30)).show()
 ```
-![alt](pillar/colorselect.png)
+![alt](images/colorselect.png)
 
 **Image.Image.remove_transparency**: return an flatenned image copy composited over a colored background.
 
@@ -495,35 +495,35 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> red = Image.from_text("red", arial(24), "red", padding=10)
 >> red.remove_transparency("grey").show()
 ```
-![alt](pillar/removetransparency.png)
+![alt](images/removetransparency.png)
 
 **Image.Image.as_mask**: convert the image for use as a mask (returning an "L"-mode representation of the alpha channel for RGBA images, while leaving "1" and "L" mode images unchanged).
 
 ```python
 >> red.as_mask().show()
 ```
-![alt](pillar/asmask.png)
+![alt](images/asmask.png)
 
 **Image.Image.invert_mask**: like as_mask, but inverts the result.
 
 ```python
 >> red.invert_mask().show()
 ```
-![alt](pillar/invertmask.png)
+![alt](images/invertmask.png)
 
 **Image.Image.add_grid**: add grid lines to an image.
 
 ```python
 >> Image.from_text("grid", arial(24), "grey", "white", padding=10).add_grid((4,3)).show()
 ```
-![alt](pillar/addgrid.png)
+![alt](images/addgrid.png)
 
 **Image.Image.add_shadow**: add a drop shadow to a transparent image.
 
 ```python
 >> Image.from_text("The rain", arial(24, bold=True), "#1f5774", padding=10).add_shadow("#00000080", offset=(2,2), blur=2).show()
 ```
-![alt](pillar/addshadow.png)
+![alt](images/addshadow.png)
 
 **Image.to_palette**: convert an image to "P" (palette) mode, using a given palette and optional dithering.
 
@@ -533,7 +533,7 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 >> Image.from_row([grad, grad.to_palette(pal), grad.to_palette(pal, dither=True)]).add_grid((3,1)).show()
 ```
 
-![alt](pillar/topalette.png)
+![alt](images/topalette.png)
 
 **Image.to_rgba**: convert an image to RGBA, or leave as is if it already is one.
 
@@ -548,52 +548,52 @@ The mask methods accept a size and shape-specific parameters. The constructor me
 ```python
 >> Rectangle((100,50), "grey", round=0.5).show()
 ```
-![alt](pillar/shaperectangle.png)
+![alt](images/shaperectangle.png)
 
 ```python
 >> Rectangle((100,50), flag.resize_fixed_aspect(width=30)).show()
 ```
-![alt](pillar/shaperectangle2.png)
+![alt](images/shaperectangle2.png)
 
 **Triangle**: generate triangular shapes or masks, with a parameter p indicating how far along the top (if p>0) or bottom-left (if p<0) vertices are.
 
 ```python
 >> Image.from_array([[Triangle(40, "grey", p=i*n/4) for n in range(5)] for i in [1,-1]], padding=5).show()
 ```
-![alt](pillar/shapetriangle.png)
+![alt](images/shapetriangle.png)
 
 **Diamond**: generate diamond shapes or masks, with a parameter p indicating how far down the left-right vertices are.
 
 ```python
 >> Image.from_row([Diamond(40, "grey", p=n/4) for n in range(5)], padding=5).show()
 ```
-![alt](pillar/shapediamond.png)
+![alt](images/shapediamond.png)
 
 **Parallelogram**: generate parallelogram shapes or masks, with a parameter p indicating how far along the top-left (if p>0) or bottom-left (if p<0) vertices are.
 
 ```python
 >> Image.from_array([[Parallelogram(40, "grey", p=i*n/4) for n in range(5)] for i in [1,-1]], padding=5).show()
 ```
-![alt](pillar/shapeparallelogram.png)
+![alt](images/shapeparallelogram.png)
 
 **Trapezoid**: generate trapezoid shapes or masks, with a parameter p indicating how far along the top (if p>0) or bottom (if p<0) vertices are.
 
 ```python
 >> Image.from_array([[Trapezoid(40, "grey", p=i*n/4) for n in range(5)] for i in [1,-1]], padding=5).show()
 ```
-![alt](pillar/shapetrapezoid.png)
+![alt](images/shapetrapezoid.png)
 
 **Stripe**: generate tilable diagonal stripes of given relative widths or number.
 
 ```python
 >> Image.from_pattern(Stripe(10, "black", "grey", intervals=(3,1)), (80, 50)).show()
 ```
-![alt](pillar/shapestripe.png)
+![alt](images/shapestripe.png)
 
 ```python
 >> Stripe((80,50), GradientColormap("red", "green", "blue"), intervals=3).show()
 ```
-![alt](pillar/shapestripe2.png)
+![alt](images/shapestripe2.png)
 
 
 **Checkers**: generate a checkers grid pattern of a given shape and number of colors.
@@ -601,33 +601,33 @@ The mask methods accept a size and shape-specific parameters. The constructor me
 ```python
 >> Checkers((80,50), "black", "grey", shape=(8,5)).show()
 ```
-![alt](pillar/shapecheckers.png)
+![alt](images/shapecheckers.png)
  
 ```python
 >> Checkers((80,50), GradientColormap("red", "green", "blue"), shape=(8,5), colors=3).show()
 ```
-![alt](pillar/shapecheckers2.png)
+![alt](images/shapecheckers2.png)
 
 **Ellipse**: generate elliptical (or circular) shapes or masks.
 
 ```python
 >> Ellipse((80,50), Diamond(10, "black", "grey")).show()
 ```
-![alt](pillar/shapeellipse.png)
+![alt](images/shapeellipse.png)
 
 **Quadrant**: generate elliptical (or circular) quadrant shapes or masks.
 
 ```python
 >> Quadrant((80,50), Diamond(10, "black", "grey")).show()
 ```
-![alt](pillar/shapequadrant.png)
+![alt](images/shapequadrant.png)
 
 **MaskUnion**: generate a shape from the union of a collection of masks (mode "L" images or alpha channels of other images). Automatically calculates the size if set to `...`.
 
 ```python
 >>  MaskUnion(..., masks=(Triangle(50), Ellipse(40))).show()
 ```
-![alt](pillar/shapeunion.png)
+![alt](images/shapeunion.png)
 
 **MaskIntersection**:  generate a shape from the intersection of a collection of masks (mode "L" images or alpha channels of other images). Automatically calculates the size if set to `...`. The `include_missing` parameters specifies how to treat areas that are missing from smaller masks.
 
@@ -635,16 +635,16 @@ The mask methods accept a size and shape-specific parameters. The constructor me
 >> pizza = MaskIntersection(..., masks=(Triangle(50), Ellipse(40)))
 >> pizza.show()
 ```
-![alt](pillar/shapeintersection1.png)
+![alt](images/shapeintersection1.png)
 
 ```python
 >> MaskIntersection(..., masks=(Diamond(50), Ellipse(20, invert=True)), include_missing=True).show()
 ```
-![alt](pillar/shapeintersection2.png)
+![alt](images/shapeintersection2.png)
 
 **MaskBorder**: generate a border of a given width from a mask.  Automatically calculates the size if set to `...`. Requires scipy.
 
 ```python
 >> MaskBorder(..., mask=pizza, width=2).show()
 ```
-![alt](pillar/shapeborder.png)
+![alt](images/shapeborder.png)
