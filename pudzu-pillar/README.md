@@ -1,4 +1,4 @@
-# [pudzu-pillar](pudzu/pillar/README.py)
+# [pudzu-pillar](pudzu/pillar/pillar.py)
 
 ## Summary 
 Various Pillow utilities. These are monkey-patched on, allowing continued use of the Image.new factory function. Most have only been tested in RGB/RGBA modes and may not work in other modes. For full features and parameters, see docstrings.
