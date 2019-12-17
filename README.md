@@ -8,14 +8,14 @@ For sample scripts that use these packages, see the [pudzu](https://github.com/U
 
 ## Installation
 
-The packages can be installed individually using either `pip install [package-name]` (for the latest release) or by running the relevant `python setup.py install`.
+The packages can be installed individually using either `pip install [package-name]` (for the latest release) or by running `pip install .` inside the relevant directory.
 
 ## Packages
 
-- [pudzu-utils](pudzu-utils/README.md) - various utility functions and data structures.
-- [pudzu-dates](pudzu-dates/README.md) - date classes supporting flexible calendars, deltas and ranges.
-- [pudzu-pillar](pudzu-pillar/README.md) - various monkey-patched Pillow utilities.
-- [pudzu-charts](pudzu-charts/README.md) - Pillow-based charting tools.
+- [pudzu-utils](pudzu-utils) - various utility functions and data structures.
+- [pudzu-dates](pudzu-dates) - date classes supporting flexible calendars, deltas and ranges.
+- [pudzu-pillar](pudzu-pillar) - various monkey-patched Pillow utilities.
+- [pudzu-charts](pudzu-charts) - Pillow-based charting tools.
 
 ## Copyright
 
