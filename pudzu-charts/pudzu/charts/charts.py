@@ -224,12 +224,12 @@ def bar_chart(data, bar_width, chart_height, type=BarChartType.SIMPLE, horizonta
         for c, v in enumerate(row):
             if type == BarChartType.STACKED_PERCENTAGE:
                 v = v / sum(row)
-                fill = color_fn(c,r,v)
+            fill = color_fn(c,r,v)
+            if type in (BarChartType.STACKED, BarChartType.STACKED_PERCENTAGE):
                 pbar = make_box(fill, (bar_width, positive_height_fn(v+sumv)-positive_height_fn(sumv)))
                 nbar = make_box(fill, (bar_width, 0))
                 sumv += v
             else:
-                fill = color_fn(c,r,v)
                 pbar = make_box(fill, (bar_width, positive_height_fn(v)))
                 nbar = make_box(fill, (bar_width, negative_height_fn(v)))
             
