@@ -1342,8 +1342,8 @@ class MarkupExpression:
                 merged, new = merged + new[0], new[1:]
             elif old and old[0] in "\\":
                 merged, old = merged + old[0], old[1:]
-            elif old and old[0] in " ":
+            elif old and old[0] in "\n ":
                 old = old[1:]
             else:
-                raise RuntimeError("Failed to merge {} with {}: difference at {} and {}".format(wrapped_text, self.text, new, old))
+                raise RuntimeError("Failed to merge:\n {!r}\nwith:\n {!r}\nmerged up to:\n {!r}\ndifference at:\n {!r} and {!r}".format(wrapped_text, self.text, merged, new, old))
         self.text = merged
