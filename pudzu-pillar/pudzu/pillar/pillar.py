@@ -543,7 +543,7 @@ class _Image(Image.Image):
         to split text across multiple lines."""
         padding = Padding(padding)
         if bidi_reshape:
-            text = bidi_layout(arabic_reshape(text))
+            text = replace_any(bidi_layout(arabic_reshape(text)), "\u200e\u200f", "")
         if bg is None:
             bg = RGBA(fg)._replace(alpha=0)
         if max_width is not None:
@@ -589,7 +589,7 @@ class _Image(Image.Image):
         if isinstance(overline_widths, Integral):
             overline_widths = (overline_widths, overline_widths)
         if bidi_reshape:
-            markup = bidi_layout(arabic_reshape(markup))
+            markup = replace_any(bidi_layout(arabic_reshape(markup)), "\u200e\u200f", "")
         mexpr = MarkupExpression(markup)
         if max_width is not None:
             text = ImageDraw.word_wrap(mexpr.get_text(), font_family(), max_width, tokenizer, hyphenator)
