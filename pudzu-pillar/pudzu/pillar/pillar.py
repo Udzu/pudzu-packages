@@ -753,6 +753,7 @@ class _Image(Image.Image):
         
     def place(self, img, align=0.5, padding=0, mask=None, copy=True):
         """Overlay an image using the given alignment and padding."""
+        if self.width == 0 or self.height == 0: return self
         align, padding = Alignment(align), Padding(padding)
         x = int(padding.l + align.x * (self.width - (img.width + padding.x)))
         y = int(padding.u + align.y * (self.height - (img.height + padding.y)))
