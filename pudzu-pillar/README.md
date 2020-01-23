@@ -432,6 +432,14 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 
 ![alt](images/padtoaspect2.png)
 
+**Image.Image.pad_to**: pad an image so that it has the given width and/or height (but never trimming).
+
+```python
+>> smallflag.pad_to(110, 110, align=(0.5,0)).show()
+```
+
+![alt](images/padto.png)
+
 **Image.Image.padded_resize**: resize an image, after first padding it to the right aspect ratio.
 
 ```python

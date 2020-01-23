@@ -817,6 +817,15 @@ class _Image(Image.Image):
             offsets.update(offsets + padding)
         return img.overlay(self, (x, y), None)
 
+    def pad_to(self, width=None, height=None, align=0.5, bg="black", offsets=None):
+        """Return a padded image with the given height and/or width. Updates optional offset structure."""
+        img = self
+        if width and width > img.width:
+            img = img.pad_to_aspect(width, img.height, align=align, bg=bg, offsets=offsets)
+        if height and height > img.height:
+            img = img.pad_to_aspect(img.width, height, align=align, bg=bg, offsets=offsets)
+        return img
+
     def resize(self, size, resample=Image.LANCZOS, *args, **kwargs):
         """Return a resized copy of the image, handling zero-width/height sizes and defaulting to LANCZOS resampling."""
         if size[0] == 0 or size[1] == 0:
@@ -1013,6 +1022,7 @@ Image.Image.pin = _Image.pin
 Image.Image.crop_to_aspect = _Image.crop_to_aspect
 Image.Image.cropped_resize = _Image.cropped_resize
 Image.Image.pad_to_aspect = _Image.pad_to_aspect
+Image.Image.pad_to = _Image.pad_to
 Image.Image.padded_resize = _Image.padded_resize
 if not hasattr(Image.Image, 'resize_nonempty'):
     Image.Image.resize_nonempty=Image.Image.resize
