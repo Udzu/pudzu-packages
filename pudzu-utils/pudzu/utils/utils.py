@@ -17,12 +17,12 @@ import types
 import unicodedata
 
 from collections import abc, OrderedDict, Counter
-from collections.abc import Sequence, Iterable, Mapping
 from enum import Enum
 from functools import wraps, partial
 from inspect import signature
 from math import log10, floor, ceil
 from time import sleep
+from typing import Sequence, Iterable, Mapping
 from urllib.parse import urlparse
 
 from toolz.dicttoolz import *
