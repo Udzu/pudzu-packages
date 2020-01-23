@@ -389,7 +389,7 @@ def time_chart(timeline_width, timeline_height,
     - interval_label_key (key or series,width,height->image/string): label for a given interval; optionally a dict keyed by TimeChartLabelPosition(s) [none]
     - event_data: (pandas dataframes): one or more dataframes containing time events [none]
     - event_time_key (key or series->time): time for a given event ["time"]
-    - event_image_key (key or series,width,height->image): image for a given event [none]
+    - event_image_key (key or series->image): image for a given event [none]
     - event_label_key (key or series,width,height->image/string): label for a given event; optionally a dict keyed by TimeChartLabelPosition(s) [none]
     - xmin (time): chart start time [auto]
     - xmax (time): chart end time [auto]
@@ -485,7 +485,7 @@ def time_chart(timeline_width, timeline_height,
                 middle = event_time_fn(d)
                 if middle < xmin or middle > xmax: continue
                 middle = xvalue(middle)
-                event_img = ignoring_extra_args(event_image_fn)(d, w, h) or Image.EMPTY_IMAGE
+                event_img = ignoring_extra_args(event_image_fn)(d) or Image.EMPTY_IMAGE
                 timeline = timeline.pin(event_img, (middle, timeline_height/2), bg=bg, offsets=offsets)
                 for pos, label_fn in event_labels_dict.items():
                     img = ignoring_extra_args(label_fn)(d, event_img.width, event_img.height)
@@ -872,7 +872,15 @@ def generate_tile_map(array, filename, size, border=0, bg="white"):
     pd.DataFrame(names).to_csv(name_csv_path(filename), index=False, encoding="utf-8")
     img.save(labelbox_img_path(filename))
     generate_bbox_csv(filename)
-    
+
+def generate_empty_label_csv(map, filename, sort_key=None):
+    """Generate an empty CSV file containing the labels of the grid-based map."""
+    df = load_name_csv(map)[["name"]]
+    df["values"] = ""
+    df = df.set_index("name")
+    if sort_key: df = df.reindex(sorted(df.index, key=sort_key))
+    df.to_csv(filename)
+
 # TODO: speed up color replacements
 def map_chart(map, color_fn, label_fn=None, label_font=None, label_color="black", overlay_fn=None, resize_patterns=False):
     """Generate a map chart from a map image and color mapping. If present, this will use a name csv file with image names
