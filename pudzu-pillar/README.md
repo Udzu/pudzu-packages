@@ -73,7 +73,7 @@ RGBA(red=77, green=175, blue=74, alpha=255)
 >> RGBPalette["Blue"]
 RGBA(red=55, green=126, blue=184, alpha=255)
 >> RGBPalette[2]
-RGBPalette[2]
+RGBA(red=55, green=126, blue=184, alpha=255)
 >> list(RGBPalette)
 [RGBA(red=228, green=26, blue=28, alpha=255),
  RGBA(red=77, green=175, blue=74, alpha=255),

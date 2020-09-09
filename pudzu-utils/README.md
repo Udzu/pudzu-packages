@@ -24,7 +24,7 @@ AttributeError: Missing module 'module' has no attribute 'fn'
 '1'
 ```
   
-**ValueBox**: a simple data container, allowing assignment in expressions. Values can be assigned with << or >> (or .set), and extracted with () (or .value).
+**ValueBox**: a simple data container, allowing assignment in expressions. Values can be assigned with << or >> (or .set), and extracted with () (or .value). Largely superseded by the walrus operator.
 
 ```python
 >> match = ValueBox()
