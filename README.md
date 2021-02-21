@@ -8,7 +8,7 @@ For sample scripts that use these packages, see the [pudzu](https://github.com/U
 
 ## Installation
 
-The packages can be installed individually using either `pip install [package-name]` (for the latest release) or by running `pip install .` inside the relevant directory.
+The packages can be installed individually using either `pip install [package-name]` (for the latest release) or by running `poetry install` inside the relevant directory.
 
 ## Packages
 
@@ -19,4 +19,4 @@ The packages can be installed individually using either `pip install [package-na
 
 ## Copyright
 
-Copyright © 2017–19 by Udzu. Licensed under the [MIT License](LICENSE).
+Copyright © 2017–21 by Udzu. Licensed under the [MIT License](LICENSE).
