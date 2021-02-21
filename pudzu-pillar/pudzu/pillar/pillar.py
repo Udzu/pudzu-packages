@@ -14,7 +14,6 @@ from urllib.request import urlopen
 
 import numpy as np
 from PIL import Image, ImageChops, ImageColor, ImageDraw, ImageFilter, ImageFont, ImageOps
-
 from pudzu.utils import *
 
 pyphen = optional_import("pyphen")
@@ -36,7 +35,7 @@ class Alignment:
 
     def __init__(self, align):
         if isinstance(align, Real):
-            return self.__init__((align, align))
+            self.__init__((align, align))
         elif non_string_sequence(align, Real) and len(align) == 2:
             if not all(0 <= x <= 1 for x in align):
                 raise ValueError("Alignment values should be between 0 and 1: got {}".format(align))
@@ -71,11 +70,11 @@ class Padding:
 
     def __init__(self, padding=0):
         if padding is None:
-            return self.__init__((0, 0, 0, 0))
+            self.__init__((0, 0, 0, 0))
         elif isinstance(padding, Integral):
-            return self.__init__((padding, padding, padding, padding))
+            self.__init__((padding, padding, padding, padding))
         elif non_string_sequence(padding, Integral) and len(padding) == 2:
-            return self.__init__((padding[0], padding[1], padding[0], padding[1]))
+            self.__init__((padding[0], padding[1], padding[0], padding[1]))
         elif non_string_sequence(padding, Integral) and len(padding) == 4:
             if not all(0 <= x for x in padding):
                 raise ValueError("Padding values should be positive: got {}".format(padding))
@@ -132,7 +131,8 @@ class Padding:
 
 
 class BoundingBox:
-    """Bounding box class initialized from 4 LURD coordinates or a collection of points with optional padding. Not used much at the moment."""
+    """Bounding box class initialized from 4 LURD coordinates or a collection of points with
+    optional padding. Not used much at the moment."""
 
     def __init__(self, box):
         if isinstance(box, Image.Image):
@@ -219,13 +219,15 @@ class BoundingBox:
 
 
 class RGBA(namedtuple("RGBA", ["red", "green", "blue", "alpha"])):
-    """Named tuple representing RGBA colors. Can be initialised by name, integer values, float values or hex strings."""
+    """Named tuple representing RGBA colors. Can be initialised by name, integer values, float
+    values or hex strings."""
 
     def __new__(cls, *color, red=None, green=None, blue=None, alpha=None):
         if any([red, green, blue, alpha]):
             if color:
                 raise ValueError(
-                    "Invalid RGBA parameters: specify either positional or keyword arguments, not both"
+                    "Invalid RGBA parameters: specify either positional or keyword arguments, "
+                    "not both"
                 )
             elif not all([red, green, blue]):
                 raise ValueError("Invalid RGBA parameters: missing R/G/B value")
@@ -251,7 +253,8 @@ class RGBA(namedtuple("RGBA", ["red", "green", "blue", "alpha"])):
 
 
 class NamedPalette(abc.Sequence):
-    """Named color palettes. Behaves like a sequence, but also allows palette lookup by (case-insensitive) name."""
+    """Named color palettes. Behaves like a sequence, but also allows palette lookup by
+    (case-insensitive) name."""
 
     def __init__(self, colors):
         self._colors_ = ValueMappingDict(
@@ -365,9 +368,10 @@ class _ImageDraw:
 
     @classmethod
     def text_size(cls, text, font, beard_line=False, *args, **kwargs):
-        """Return the size of a given string in pixels. Same as ImageDraw.Draw.textsize but doesn't
-        require a drawable object, and handles descenders on multiline text and negative horizontal offsets.
-        Setting beard_line makes the height include the beard line even if there are no descenders."""
+        """Return the size of a given string in pixels. Same as ImageDraw.Draw.textsize but
+        doesn't require a drawable object, and handles descenders on multiline text and negative
+        horizontal offsets. Setting beard_line makes the height include the beard line even if
+        there are no descenders."""
         x, y = cls._textsize(text, font, *args, **kwargs)
         lines = text.split("\n")
         last_height = cls._textsize(lines[-1], font, *args, **kwargs)[1]
@@ -425,13 +429,15 @@ ImageDraw.word_wrap = _ImageDraw.word_wrap
 class _ImageColor:
     @classmethod
     def to_linear(cls, srgb):
-        """Convert a /single/ sRGB color value between 0 and 255 to a linear value between 0 and 1. Numpy-aware."""
+        """Convert a /single/ sRGB color value between 0 and 255 to a linear value between 0 and 1.
+        Numpy-aware."""
         c = srgb / 255
         return np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
 
     @classmethod
     def from_linear(cls, lrgb):
-        """Convert a /single/ linear RGB value between 0 and 1 to an sRGB value between 0 and 255. Numpy-aware."""
+        """Convert a /single/ linear RGB value between 0 and 1 to an sRGB value between 0 and 255.
+        Numpy-aware."""
         c = np.where(lrgb <= 0.0031308, 12.92 * lrgb, (1.055) * lrgb ** (1 / 2.4) - 0.055)
         return np.round(c * 255).astype(int)
 
@@ -524,7 +530,8 @@ RGBA.alpha_blend = papply(ImageColor.alpha_blend)
 
 
 class SequenceColormap:
-    """A matplotlib colormap generated from a sequence of other colormaps and optional spacing intervals."""
+    """A matplotlib colormap generated from a sequence of other colormaps and optional spacing
+    intervals."""
 
     def __init__(self, *cmaps, intervals=None):
         if intervals is None:
@@ -600,7 +607,8 @@ class ConstantColormap:
 
 
 class PaletteColormap:
-    """A matplotlib colormap generated from constant colors and optional spacing intervals. Can also be used as a discrete cycling colormap."""
+    """A matplotlib colormap generated from constant colors and optional spacing intervals. Can
+    also be used as a discrete cycling colormap."""
 
     def __init__(self, *colors, intervals=None):
         self.colors = tmap(RGBA, colors)
@@ -654,7 +662,7 @@ class GradientColormap(SequenceColormap):
 
 
 class FunctionColormap:
-    """A matplotlib colormap generated from numpy-aware channel functions (either in RGBA or HSLA)."""
+    """A matplotlib colormap generated from numpy-aware channel functions (in RGBA or HSLA)."""
 
     def __init__(self, red_fn, green_fn, blue_fn, alpha_fn=np.ones_like, hsl=False):
         self.functions = [
@@ -736,9 +744,10 @@ class _Image(Image.Image):
         beard_line=False,
         bidi_reshape=True,
     ):
-        """Create image from multiple texts, lining up the baselines. Only supports single-line texts.
+        """Create image from multiple texts, lining up the baselines. Only supports single line.
         For multline texts, combine images with Image.from_column (with equal_heights set to True).
-        The texts parameter can also include images, which are lined up to sit on the baseline+img_offset."""
+        The texts parameter can also include images, which are lined up to sit on the
+        baseline+img_offset."""
         texts = make_iterable(texts)
         if not non_string_iterable(fonts):
             fonts = [fonts] * len(texts)
@@ -753,9 +762,8 @@ class _Image(Image.Image):
         lengths = (len(fonts), len(fgs), len(bgs), len(underlines), len(strikethroughs))
         if not all(l == len(texts) for l in lengths):
             raise ValueError(
-                "Number of fonts, fgs, bgs, underlines or strikethroughs is inconsistent with number of texts: got {}, expected {}".format(
-                    lengths, len(texts)
-                )
+                "Number of fonts, fgs, bgs, underlines or strikethroughs is inconsistent with "
+                "number of texts: got {}, expected {}".format(lengths, len(texts))
             )
         bgs = [bg if bg is not None else RGBA(fg)._replace(alpha=0) for fg, bg in zip(fgs, bgs)]
         imgs = [
@@ -809,7 +817,8 @@ class _Image(Image.Image):
         beard_line=False,
         bidi_reshape=True,
     ):
-        """Create image from simle markup. See MarkupExpression for details. Max width uses normal font to split text so is not precise."""
+        """Create image from simle markup. See MarkupExpression for details. Max width uses normal
+        font to split text so is not precise."""
         if isinstance(overline_widths, Integral):
             overline_widths = (overline_widths, overline_widths)
         if bidi_reshape:
@@ -967,7 +976,8 @@ class _Image(Image.Image):
 
     @classmethod
     def from_column(cls, column, **kwargs):
-        """Create an image from a column of images. See Image.from_array for passthrough parameters."""
+        """Create an image from a column of images. See Image.from_array for passthrough
+        parameters."""
         return cls.from_array([[img] for img in column], **kwargs)
 
     @classmethod
@@ -1049,9 +1059,10 @@ class _Image(Image.Image):
         bg=None,
         padding=0,
         line_spacing=0,
-        **kwargs
+        **kwargs,
     ):
-        """Create image from multiple lines of text, fitting each line in the given width. Inefficient."""
+        """Create image from multiple lines of text, fitting each line in the given width.
+        Inefficient."""
         return cls.from_column(
             [
                 cls.from_text_bounded(
@@ -1061,7 +1072,7 @@ class _Image(Image.Image):
                     font_fn,
                     *args,
                     bg=bg,
-                    **kwargs
+                    **kwargs,
                 )
                 for line in text.split("\n")
             ],
@@ -1130,7 +1141,8 @@ class _Image(Image.Image):
         return self.crop((padding.l, padding.u, self.width - padding.r, self.height - padding.d))
 
     def pin(self, img, position, align=0.5, bg=(0, 0, 0, 0), offsets=None):
-        """Pin an image onto another image, copying and if necessary expanding it. Uses and updates optional offset structure."""
+        """Pin an image onto another image, copying and if necessary expanding it. Uses and updates
+        optional offset structure."""
         align = Alignment(align)
         if offsets is None:
             offsets = Padding(0)
@@ -1187,7 +1199,8 @@ class _Image(Image.Image):
         return img.overlay(self, (x, y), None)
 
     def pad_to(self, width=None, height=None, align=0.5, bg="black", offsets=None):
-        """Return a padded image with the given height and/or width. Updates optional offset structure."""
+        """Return a padded image with the given height and/or width. Updates optional offset
+        structure."""
         img = self
         if width and width > img.width:
             img = img.pad_to_aspect(width, img.height, align=align, bg=bg, offsets=offsets)
@@ -1196,7 +1209,8 @@ class _Image(Image.Image):
         return img
 
     def resize(self, size, resample=Image.LANCZOS, *args, **kwargs):
-        """Return a resized copy of the image, handling zero-width/height sizes and defaulting to LANCZOS resampling."""
+        """Return a resized copy of the image, handling zero-width/height sizes and defaulting
+        to LANCZOS resampling."""
         if size[0] == 0 or size[1] == 0:
             return Image.new(self.mode, size)
         else:
@@ -1336,7 +1350,8 @@ class _Image(Image.Image):
         return self.blend(other, p, linear_conversion=linear_conversion)
 
     def alpha_blend(self, *fgs, linear_conversion=True):
-        """Alpha blend images onto this image. Like alpha_composite but sRGB aware (and a fair bit slower)."""
+        """Alpha blend images onto this image. Like alpha_composite but sRGB aware (and a fair
+        bit slower)."""
         if not fgs:
             return self
         fg, *fgs = fgs
@@ -1361,7 +1376,8 @@ class _Image(Image.Image):
         return img.alpha_blend(*fgs, linear_conversion=linear_conversion)
 
     def to_heatmap(self, colormap):
-        """Create a heatmap image from a mask using a matplotlib color map. Mask is either a mode L image or the image's alpha channel. Requires numpy."""
+        """Create a heatmap image from a mask using a matplotlib color map. Mask is either a
+        mode L image or the image's alpha channel. Requires numpy."""
         array = np.array(self.as_mask()) / 255
         return Image.fromarray(colormap(array, bytes=True))
 
@@ -1534,14 +1550,15 @@ class ImageShape(object):
     @classmethod
     @ABC.abstractmethod
     def mask(cls, size, **kwargs):
-        """Generate a mask of the appropriate shape and size. Unless cls.antialising is set to False,
-        this may be called at a higher size and scaled down. Additional parameters should therefore
-        either be size-independent or scale according to the optional _scale parameter."""
+        """Generate a mask of the appropriate shape and size. Unless cls.antialising is set to
+        False, this may be called at a higher size and scaled down. Additional parameters should
+        therefore either be size-independent or scale according to the optional _scale parameter."""
 
     antialiasing = True
 
     def __new__(cls, size, fg="black", bg=None, antialias=4, invert=False, **kwargs):
-        """Generate an image of the appropriate shape. See mask method for additional shape-specific parameters.
+        """Generate an image of the appropriate shape. See mask method for additional
+        shape-specific parameters.
         - size (int/(int,int)): image size
         - fg (color/pattern): image foreground [black]
         - bg (color/pattern): image background [None]
@@ -1792,7 +1809,8 @@ class MaskBorder(ImageShape):
 
     @classmethod
     def mask(cls, size, mask, width):
-        """Edge border of a given mask. Requires scipy. Size is automatically calculated if set to ..."""
+        """Edge border of a given mask. Requires scipy. Size is automatically calculated if set
+        to ..."""
         w = width / 2
         if size == ...:
             size = tmap(lambda x: ceil(x + w), mask.size)
@@ -1814,7 +1832,7 @@ class MaskBorder(ImageShape):
 
 
 class MarkupExpression:
-    """Simple markup syntax for use in Image.Image.from_markup. Supports
+    r"""Simple markup syntax for use in Image.Image.from_markup. Supports
     **bold**, //italics//, __underline__, ~~strikethrough~~ and [[color]].
     Attributes can be nested. Attributes (and \'s) can be escaped with a \."""
 
@@ -1890,7 +1908,8 @@ class MarkupExpression:
                 old = old[1:]
             else:
                 raise RuntimeError(
-                    "Failed to merge:\n {!r}\nwith:\n {!r}\nmerged up to:\n {!r}\ndifference at:\n {!r} and {!r}".format(
+                    "Failed to merge:\n {!r}\nwith:\n {!r}\nmerged up to:\n {!r}\n"
+                    "difference at:\n {!r} and {!r}".format(
                         wrapped_text, self.text, merged, new, old
                     )
                 )

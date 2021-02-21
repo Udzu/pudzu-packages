@@ -212,8 +212,8 @@ def number_of_positional_args(fn):
 
 
 def names_of_keyword_args(fn):
-    """Return the names of all the keyword arguments for a function, or None if the number is variable.
-    Looks inside any decorated functions."""
+    """Return the names of all the keyword arguments for a function, or None if the number is
+    variable. Looks inside any decorated functions."""
     try:
         if hasattr(fn, "__wrapped__"):
             return names_of_keyword_args(fn.__wrapped__)
@@ -227,7 +227,8 @@ def names_of_keyword_args(fn):
             }
     except ValueError:
         # signatures don't work for built-in operators, so try to extract from the docstring(!)
-        # only include optional arguments, since positional arguments are typically positional-only in built-ins
+        # only include optional arguments, since positional arguments are typically positional-only
+        # in built-ins
         if fn.__doc__ is not None:
             specs = re.findall(r"{}\(.*?\)".format(re.escape(fn.__name__)), fn.__doc__)
             if specs:
@@ -276,13 +277,13 @@ def with_retries(fn, max_retries=None, max_duration=None, interval=0.5, exceptio
             end_time = datetime.datetime.max
         else:
             end_time = datetime.datetime.now() + datetime.timedelta(seconds=max_duration)
-        for i in itertools.count() if max_retries is None else range(max_retries):
+        for i in itertools.count():
             try:
                 return fn(*args, **kwargs)
             except exceptions:
                 if i + 1 == max_retries:
                     raise
-                elif datetime.datetime.now() > datetime.datetime.max:
+                elif datetime.datetime.now() > end_time:
                     raise
                 else:
                     sleep(interval)
@@ -383,7 +384,8 @@ def make_sequence(v):
 
 
 def unmake_sequence(v):
-    """Return None for an empty sequence, the first element of a sequence of length 1, otherwise leave unchanged."""
+    """Return None for an empty sequence, the first element of a sequence of length 1, otherwise
+    leave unchanged."""
     if not non_string_sequence(v) or len(v) > 1:
         return v
     elif len(v) == 1:
@@ -448,7 +450,8 @@ def treversed(*args, **kwargs):
 
 
 def tmap_leafs(func, *iterables, base_factory=tuple):
-    """Return a nested tuple (or other containers) containing the result of applying a function to the leaves of iterables of the same shape."""
+    """Return a nested tuple (or other containers) containing the result of applying a function to
+    the leaves of iterables of the same shape."""
     if not all(non_string_iterable(i) for i in iterables):
         return func(*iterables)
     elif non_string_sequence(base_factory):
@@ -517,7 +520,9 @@ def filter_proportion(iterable, proportion):
 
 
 def generate_subsequences(iterable, start_if, end_if):
-    """Generator that returns subsequences based on start and end condition functions. Both functions get passed the current element, while the end function optionally gets passed the current subsequence too."""
+    """Generator that returns subsequences based on start and end condition functions. Both
+    functions get passed the current element, while the end function optionally gets passed the
+    current subsequence too."""
     sourceiter = iter(iterable)
     try:
         start = next(x for x in sourceiter if start_if(x))
@@ -538,7 +543,8 @@ def generate_subsequences(iterable, start_if, end_if):
 
 
 def riffle_shuffle(iterable, n=2):
-    """Generator that performs a perfect riffle shuffle on the input, using a given number of subdecks."""
+    """Generator that performs a perfect riffle shuffle on the input, using a given number of
+    subdecks."""
     return itertools.filterfalse(
         non,
         itertools.chain.from_iterable(zip(*list(itertools.zip_longest(*[iter(iterable)] * n)))),
@@ -607,9 +613,8 @@ def papply(func, *args, **kwargs):
     def newfunc(*fargs, **fkwargs):
         if len(fargs) < min_args:
             raise TypeError(
-                "Partial application expects at least {} positional arguments but {} were given".format(
-                    min_args, len(fargs)
-                )
+                "Partial application expects at least {} positional arguments "
+                "but {} were given".format(min_args, len(fargs))
             )
         newkwargs = kwargs.copy()
         newkwargs.update(fkwargs)
@@ -645,141 +650,141 @@ def artial(func, *args, **kwargs):
 # Strings
 
 
-def strip_from(str, *seps, last=False, ignore_case=False):
+def strip_from(string, *seps, last=False, ignore_case=False):
     """Strip everything from the first/last occurence of one of the seps."""
-    flags = re.DOTALL | re.IGNORECASE * (ignore_case == True)
+    flags = re.DOTALL | re.IGNORECASE * ignore_case
     regex = re.compile(
         "(.*{greedy})({seps}).*".format(
             greedy="?" * (not last), seps="|".join(re.escape(sep) for sep in seps)
         ),
         flags=flags,
     )
-    return re.sub(regex, r"\1", str)
+    return re.sub(regex, r"\1", string)
 
 
-def strip_after(str, *seps, last=False, ignore_case=False):
+def strip_after(string, *seps, last=False, ignore_case=False):
     """Strip everything after the first/last occurence of one of the seps."""
-    flags = re.DOTALL | re.IGNORECASE * (ignore_case == True)
+    flags = re.DOTALL | re.IGNORECASE * ignore_case
     regex = re.compile(
         "(.*{greedy}({seps})).*".format(
             greedy="?" * (not last), seps="|".join(re.escape(sep) for sep in seps)
         ),
         flags=flags,
     )
-    return re.sub(regex, r"\1", str)
+    return re.sub(regex, r"\1", string)
 
 
-def strip_to(str, *seps, last=False, ignore_case=False):
+def strip_to(string, *seps, last=False, ignore_case=False):
     """Strip everything to the first/last occurence of one of the seps."""
-    flags = re.DOTALL | re.IGNORECASE * (ignore_case == True)
+    flags = re.DOTALL | re.IGNORECASE * ignore_case
     regex = re.compile(
         ".*{greedy}({seps})(.*)".format(
             greedy="?" * (not last), seps="|".join(re.escape(sep) for sep in seps)
         ),
         flags=flags,
     )
-    return re.sub(regex, r"\2", str)
+    return re.sub(regex, r"\2", string)
 
 
-def strip_before(str, *seps, last=False, ignore_case=False):
+def strip_before(string, *seps, last=False, ignore_case=False):
     """Strip everything before the first/last occurence of one of the seps."""
-    flags = re.DOTALL | re.IGNORECASE * (ignore_case == True)
+    flags = re.DOTALL | re.IGNORECASE * ignore_case
     regex = re.compile(
         ".*{greedy}(({seps}).*)".format(
             greedy="?" * (not last), seps="|".join(re.escape(sep) for sep in seps)
         ),
         flags=flags,
     )
-    return re.sub(regex, r"\1", str)
+    return re.sub(regex, r"\1", string)
 
 
-def replace_any(str, substrings, new, count=0, ignore_case=False):
-    """Replace any of substrings by new. New can be either a string or a function from matching string to string."""
-    flags = re.DOTALL | re.IGNORECASE * (ignore_case == True)
+def replace_any(string, substrings, new, count=0, ignore_case=False):
+    """Replace any of substrings by new. New can be either a string or a function from matching
+    string to string."""
+    flags = re.DOTALL | re.IGNORECASE * ignore_case
     regex = re.compile("|".join(re.escape(old) for old in substrings), flags=flags)
     replacement = (lambda m: new(m.group(0))) if callable(new) else lambda m: new
-    return re.sub(regex, replacement, str, count=count)
+    return re.sub(regex, replacement, string, count=count)
 
 
-def strip_any(str, substrings, count=0, ignore_case=False):
+def strip_any(string, substrings, count=0, ignore_case=False):
     """Strip any of substrings."""
-    return replace_any(str, substrings, "", count=count, ignore_case=ignore_case)
+    return replace_any(string, substrings, "", count=count, ignore_case=ignore_case)
 
 
-def replace_map(str, mapping, count=0, ignore_case=False):
+def replace_map(string, mapping, count=0, ignore_case=False):
     """Replace substrings using a mapping."""
     if ignore_case:
         mapping = CaseInsensitiveDict(mapping)
     return replace_any(
-        str, mapping.keys(), lambda s: mapping[s], count=count, ignore_case=ignore_case
+        string, mapping.keys(), lambda s: mapping[s], count=count, ignore_case=ignore_case
     )
 
 
-def shortify(s, width, tail=5, placeholder="[...]", collapse_whitespace=True):
+def shortify(string, width, tail=5, placeholder="[...]", collapse_whitespace=True):
     """ Truncate a string to fit within a given width. A bit like textwrap.shorten."""
     if collapse_whitespace:
-        s = re.sub("\s+", " ", s)
+        string = re.sub(r"\s+", " ", string)
     if width < 2 * tail + len(placeholder):
         raise ValueError(
             "Width parameter {} too short for tail={} and placeholder='{}'".format(
                 width, tail, placeholder
             )
         )
-    elif len(s) <= width:
-        return s
+    elif len(string) <= width:
+        return string
     else:
-        return s[: width - tail - len(placeholder)] + placeholder + s[-tail:]
+        return string[: width - tail - len(placeholder)] + placeholder + string[-tail:]
 
 
-def strip_accents(str, aggressive=False, german=False):
+def strip_accents(string, aggressive=False, german=False):
     """Strip accents from a string. Default behaviour is to use NFD normalization
     (canonical decomposition) and strip combining characters. Aggressive mode also
     replaces ß with ss, l with l, ø with o and so on. German mode first replaces ö
     with oe, etc."""
     if german:
 
-        def german_strip(
-            c,
-            d,
-            german_conversions={
-                "ß": "ss",
-                "ẞ": "SS",
-                "Ä": "AE",
-                "ä": "ae",
-                "Ö": "OE",
-                "ö": "oe",
-                "Ü": "UE",
-                "ü": "ue",
-            },
-        ):
+        def german_strip(c, d, german_conversions=None):
+            if german_conversions is None:
+                german_conversions = {
+                    "ß": "ss",
+                    "ẞ": "SS",
+                    "Ä": "AE",
+                    "ä": "ae",
+                    "Ö": "OE",
+                    "ö": "oe",
+                    "Ü": "UE",
+                    "ü": "ue",
+                }
             c = german_conversions.get(c, c)
             if len(c) > 1 and c[0].isupper() and d.islower():
                 c = c.title()
             return c
 
-        str = "".join(german_strip(c, d) for c, d in generate_ngrams(str + " ", 2))
-    str = "".join(c for c in unicodedata.normalize("NFD", str) if not unicodedata.combining(c))
+        string = "".join(german_strip(c, d) for c, d in generate_ngrams(string + " ", 2))
+    string = "".join(
+        c for c in unicodedata.normalize("NFD", string) if not unicodedata.combining(c)
+    )
     if aggressive:
 
         @partial(ignoring_exceptions, handler=identity, exceptions=KeyError)
-        def aggressive_strip(
-            c,
-            extra_conversions={
-                "ß": "ss",
-                "ẞ": "SS",
-                "Æ": "AE",
-                "æ": "ae",
-                "Œ": "OE",
-                "œ": "oe",
-                "Ĳ": "IJ",
-                "ĳ": "ij",
-                "ﬀ": "ff",
-                "ﬃ": "ffi",
-                "ﬄ": "ffl",
-                "ﬁ": "fi",
-                "ﬂ": "fl",
-            },
-        ):
+        def aggressive_strip(c, extra_conversions=None):
+            if extra_conversions is None:
+                extra_conversions = {
+                    "ß": "ss",
+                    "ẞ": "SS",
+                    "Æ": "AE",
+                    "æ": "ae",
+                    "Œ": "OE",
+                    "œ": "oe",
+                    "Ĳ": "IJ",
+                    "ĳ": "ij",
+                    "ﬀ": "ff",
+                    "ﬃ": "ffi",
+                    "ﬄ": "ffl",
+                    "ﬁ": "fi",
+                    "ﬂ": "fl",
+                }
             if c in extra_conversions:
                 return extra_conversions[c]
             name = unicodedata.name(c, "")
@@ -788,8 +793,8 @@ def strip_accents(str, aggressive=False, german=False):
                 return unicodedata.lookup(name[:variant])
             return c
 
-        str = "".join(aggressive_strip(c) for c in str)
-    return str
+        string = "".join(aggressive_strip(c) for c in string)
+    return string
 
 
 def substitute(text, _pattern=r"\{\{(.*?)\}\}", **kwargs):
@@ -815,7 +820,7 @@ class KeyEquivalenceDict(abc.MutableMapping):
         Enum("KeyEquivalenceDict", "USE_FIRST_KEY USE_LAST_KEY USE_NORMALIZED_KEY").__members__
     )
 
-    def __init__(self, data={}, normalizer=identity, base_factory=dict, key_choice=USE_LAST_KEY):
+    def __init__(self, data=None, normalizer=identity, base_factory=dict, key_choice=USE_LAST_KEY):
         self.normalizer = getattr(self, "default_normalizer", normalizer)
         self.base_factory = getattr(self, "default_base_factory", base_factory)
         self.key_choice = getattr(self, "default_key_choice", key_choice)
@@ -830,7 +835,7 @@ class KeyEquivalenceDict(abc.MutableMapping):
         elif isinstance(data, abc.Iterable):
             for (k, v) in data:
                 self.__setitem__(k, v)
-        else:
+        elif data is not None:
             raise TypeError(f"'{type(data).__name__}' object is not iterable")
 
     # abc methods
@@ -920,7 +925,7 @@ class CaseInsensitiveDict(KeyEquivalenceDict, normalizer=str.lower):
     like dict. Stores the underlying data in a base_factory(), and keeps track of
     the key specified by key_choice."""
 
-    def __init__(self, data={}, base_factory=dict, key_choice=KeyEquivalenceDict.USE_LAST_KEY):
+    def __init__(self, data=None, base_factory=dict, key_choice=KeyEquivalenceDict.USE_LAST_KEY):
         super().__init__(data, base_factory=base_factory, key_choice=key_choice)
 
 
@@ -932,7 +937,7 @@ class ValueMappingDict(abc.MutableMapping):
     class SkipInsertion(Exception):
         pass
 
-    def __init__(self, data={}, value_mapping=identity, base_factory=dict):
+    def __init__(self, data=None, value_mapping=identity, base_factory=dict):
         self.value_mapping = getattr(self, "default_value_mapping", value_mapping)
         self.base_factory = getattr(self, "default_base_factory", base_factory)
         self._data = base_factory()
@@ -942,7 +947,7 @@ class ValueMappingDict(abc.MutableMapping):
         elif isinstance(data, abc.Iterable):
             for (k, v) in data:
                 self.__setitem__(k, v)
-        else:
+        elif data is not None:
             raise TypeError("'{}' object is not iterable".format(type(data).__name__))
 
     def __setitem__(self, k, v):
@@ -1072,7 +1077,8 @@ def printed(o, **kwargs):
 
 
 def url_to_filepath(url):
-    """Convert url to a filepath of the form hostname/hash-of-path.extension. Ignores protocol, port, query and fragment."""
+    """Convert url to a filepath of the form hostname/hash-of-path.extension. Ignores protocol,
+    port, query and fragment."""
     uparse = urlparse(url)
     upath, uext = os.path.splitext(uparse.path)
     uname = hashlib.sha1(upath.encode("utf-8")).hexdigest()
@@ -1240,7 +1246,8 @@ class switch:
                 ]
                 if missing:
                     raise KeyError(
-                        "Incomplete switch handling for {}: missing {} (set police_enums=False to ignore)".format(
+                        "Incomplete switch handling for {}: missing {} "
+                        "(set police_enums=False to ignore)".format(
                             enum_type, ", ".join(map(str, missing))
                         )
                     )
