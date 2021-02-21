@@ -33,18 +33,21 @@ black = { version = "*", allow-prereleases = true }
 isort = "*"
 taskipy = "*"
 pudzu-utils = { path = "../pudzu-utils", develop = true }
+pytest = "*"
+pytest-mypy = "*"
+pytest-pylint = "*"
 
 [tool.poetry.extras]
 image_extras = ["scipy", "requests"]
 text_extras = ["pyphen", "python-bidi", "arabic-reshaper"]
 
 [tool.taskipy.tasks]
-pylint = "pylint pudzu"
-mypy = "mypy pudzu"
-black = "black pudzu"
-isort = "isort pudzu"
+test = "pytest --pylint --mypy"
 format = "task isort && task black"
-check = "task mypy; task pylint"
+mypy = "pytest --mypy -m mypy"
+pylint = "pytest --pylint -m pylint"
+black = "black ."
+isort = "isort ."
 
 [tool.black]
 line-length = 100

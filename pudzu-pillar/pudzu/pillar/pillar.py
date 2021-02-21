@@ -1832,7 +1832,7 @@ class MaskBorder(ImageShape):
 
 
 class MarkupExpression:
-    """Simple markup syntax for use in Image.Image.from_markup. Supports
+    r"""Simple markup syntax for use in Image.Image.from_markup. Supports
     **bold**, //italics//, __underline__, ~~strikethrough~~ and [[color]].
     Attributes can be nested. Attributes (and \'s) can be escaped with a \."""
 

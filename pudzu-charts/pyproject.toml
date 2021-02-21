@@ -31,14 +31,17 @@ taskipy = "*"
 pudzu-utils = { path = "../pudzu-utils", develop = true }
 pudzu-dates = { path = "../pudzu-dates", develop = true }
 pudzu-pillar = { path = "../pudzu-pillar", develop = true }
+pytest = "*"
+pytest-mypy = "*"
+pytest-pylint = "*"
 
 [tool.taskipy.tasks]
-pylint = "pylint pudzu"
-mypy = "mypy pudzu"
-black = "black pudzu"
-isort = "isort pudzu"
+test = "pytest --pylint --mypy"
 format = "task isort && task black"
-check = "task mypy; task pylint"
+mypy = "pytest --mypy -m mypy"
+pylint = "pytest --pylint -m pylint"
+black = "black ."
+isort = "isort ."
 
 [tool.black]
 line-length = 120
