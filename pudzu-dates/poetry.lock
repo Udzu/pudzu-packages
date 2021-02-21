@@ -139,6 +139,22 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 test = ["ipaddress", "mock", "unittest2", "enum34", "pywin32", "wmi"]
 
 [[package]]
+name = "pudzu-utils"
+version = "0.9.2"
+description = "Various utility functions and data structures used by the other pudzu packages"
+category = "main"
+optional = false
+python-versions = "^3.7"
+develop = true
+
+[package.dependencies]
+toolz = "^0.11.1"
+
+[package.source]
+type = "directory"
+url = "../pudzu-utils"
+
+[[package]]
 name = "pylint"
 version = "2.6.2"
 description = "python code static checker"
@@ -225,7 +241,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "a2d786429d3c0745a28f763f51f0d0aceca44ac2e8443876dd60516a3587d8f1"
+content-hash = "412fe8970f4354922e6454da8565cff94c830376cb6c523104f2f8b5c0b01ba3"
 
 [metadata.files]
 appdirs = [
@@ -344,6 +360,7 @@ psutil = [
     {file = "psutil-5.8.0-cp39-cp39-win_amd64.whl", hash = "sha256:f4634b033faf0d968bb9220dd1c793b897ab7f1189956e1aa9eae752527127d3"},
     {file = "psutil-5.8.0.tar.gz", hash = "sha256:0c9ccb99ab76025f2f0bbecf341d4656e9c1351db8cc8a03ccd62e318ab4b5c6"},
 ]
+pudzu-utils = []
 pylint = [
     {file = "pylint-2.6.2-py3-none-any.whl", hash = "sha256:e71c2e9614a4f06e36498f310027942b0f4f2fde20aebb01655b31edc63b9eaf"},
     {file = "pylint-2.6.2.tar.gz", hash = "sha256:718b74786ea7ed07aa0c58bf572154d4679f960d26e9641cc1de204a30b87fc9"},

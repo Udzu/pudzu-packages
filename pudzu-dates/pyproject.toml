@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "pudzu-utils"
-version = "0.9.2"
-description = "Various utility functions and data structures used by the other pudzu packages"
+name = "pudzu-dates"
+version = "0.9.1"
+description = "Date classes supporting flexible calendars, date deltas and ranges"
 packages = [{ include = "pudzu" }]
-keywords = ["pudzu", "utilities"]
+keywords = ["pudzu", "date", "calendar"]
 
 authors = ["Uri Granta <uri.granta+python@gmail.com>"]
-homepage = "https://github.com/Udzu/pudzu-packages/pudzu-utils/"
+homepage = "https://github.com/Udzu/pudzu-packages/pudzu-dates/"
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -17,7 +17,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-toolz = "^0.11.1"
+pudzu-utils = "^0.9.2"
 
 [tool.poetry.dev-dependencies]
 mypy = "*"
@@ -25,6 +25,7 @@ pylint = "*"
 black = { version = "*", allow-prereleases = true }
 isort = "*"
 taskipy = "*"
+pudzu-utils = { path = "../pudzu-utils", develop = true }
 
 [tool.taskipy.tasks]
 pylint = "pylint pudzu"
