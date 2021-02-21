@@ -4,7 +4,6 @@ from itertools import chain
 from os.path import splitext
 
 import pandas as pd
-
 from pudzu.dates import *
 from pudzu.pillar import *
 
