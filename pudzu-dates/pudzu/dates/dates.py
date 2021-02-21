@@ -12,7 +12,8 @@ cdate = optional_import("convertdate")
 
 # Date class supporting flexible calendars, deltas and ranges
 
-# Calendars (gregorian, julian, astronomical; with convertdate, also: iso week, hebrew, islamic, french republican)
+# Calendars (gregorian, julian, astronomical; with convertdate, also: iso week, hebrew, islamic,
+# french republican)
 
 YMD = namedtuple("YMD", ["year", "month", "day"])
 
@@ -309,8 +310,8 @@ class IslamicCalendar(Calendar):
 
 
 class HebrewCalendar(Calendar):
-    """Proleptic Hebrew Calendar. Months are based on the ecclesiastical year, years on the civil year.
-    This means that the year increments between months 6 and 7!"""
+    """Proleptic Hebrew Calendar. Months are based on the ecclesiastical year, years on the
+    civil year. This means that the year increments between months 6 and 7!"""
 
     MONTHS = (
         "Nisan",
@@ -855,7 +856,7 @@ class DateRange(collections.abc.Sequence):
         if not non_string_sequence(other):
             other = (other, other)
         elif not len(other) == 2:
-            raise NotImplemented
+            return NotImplemented
         return DateRange(
             self.start + other[0], self.end + other[1], calendar=self.calendar, format=self.format
         )
@@ -866,7 +867,7 @@ class DateRange(collections.abc.Sequence):
         elif not non_string_sequence(other):
             other = (other, other)
         elif not len(other) == 2:
-            raise NotImplemented
+            return NotImplemented
         difference = (self.start - other[0], self.end - other[1])
         if non_string_sequence(difference, Date):
             return DateRange(
@@ -903,7 +904,7 @@ class ApproximateDate(DateRange):
         self.circa = circa
 
         # initialise range
-        year, month, day = self.base_date.ymd
+        year, month, _ = self.base_date.ymd
         circa_range = self.CIRCA_RANGE * int(circa)
         if precision == DatePrecision.DAY:
             delta = DateInterval(days=circa_range)
@@ -943,8 +944,6 @@ class ApproximateDate(DateRange):
             start = Date((first_year, 1, 1), calendar=calendar) - delta
             end = Date((last_year, last_month, last_day), calendar=calendar) + delta
             self.description = "{}{}s".format(abs(year) // 10 ** n, "0" * n)
-        else:
-            raise NotImplemented
         super().__init__(start, end, calendar=calendar)
 
     def __repr__(self):
@@ -963,7 +962,7 @@ class ApproximateDate(DateRange):
                 str(abs(self.base_date.ymd.year)), self.description
             )
         else:
-            raise NotImplemented
+            return NotImplemented
         return "{}{} ({}) [{}]".format(
             "c. " * int(self.circa), range, self.precision.name.lower(), self.calendar.calendar_name
         )

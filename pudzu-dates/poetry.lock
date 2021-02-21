@@ -59,6 +59,22 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
+name = "convertdate"
+version = "2.3.1"
+description = "Converts between Gregorian dates and other calendar systems.Calendars included: Baha'i, French Republican, Hebrew, Indian Civil, Islamic, ISO, Julian, Mayan and Persian."
+category = "main"
+optional = true
+python-versions = ">=3.5"
+
+[package.dependencies]
+pymeeus = ">=0.3.6,<0.3.8 || >0.3.8,<=1"
+pytz = ">=2014.10"
+
+[package.extras]
+docs = ["sphinx", "sphinx-rtd-theme"]
+test = ["coverage"]
+
+[[package]]
 name = "isort"
 version = "5.7.0"
 description = "A Python utility / library to sort Python imports."
@@ -170,6 +186,22 @@ mccabe = ">=0.6,<0.7"
 toml = ">=0.7.1"
 
 [[package]]
+name = "pymeeus"
+version = "0.3.13"
+description = "Python implementation of Jean Meeus astronomical routines"
+category = "main"
+optional = true
+python-versions = "*"
+
+[[package]]
+name = "pytz"
+version = "2021.1"
+description = "World timezone definitions, modern and historical"
+category = "main"
+optional = true
+python-versions = "*"
+
+[[package]]
 name = "regex"
 version = "2020.11.13"
 description = "Alternative regular expression module, to replace re."
@@ -238,10 +270,13 @@ category = "dev"
 optional = false
 python-versions = "*"
 
+[extras]
+extras = ["convertdate"]
+
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "412fe8970f4354922e6454da8565cff94c830376cb6c523104f2f8b5c0b01ba3"
+content-hash = "539696ea37320f4509617bcb909f9237f92b546653b8c16ee75636d1d1dece20"
 
 [metadata.files]
 appdirs = [
@@ -262,6 +297,10 @@ click = [
 colorama = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
+]
+convertdate = [
+    {file = "convertdate-2.3.1-py3-none-any.whl", hash = "sha256:ede4b0bfbef002de8e31b9d8c03dc619a210915ce453e7a4826ac8808110fcff"},
+    {file = "convertdate-2.3.1.tar.gz", hash = "sha256:4eabe5cab9f7890c6bddab2133502de9d116ad81f2fcf16c4858fef2b737e328"},
 ]
 isort = [
     {file = "isort-5.7.0-py3-none-any.whl", hash = "sha256:fff4f0c04e1825522ce6949973e83110a6e907750cd92d128b0d14aaaadbffdc"},
@@ -364,6 +403,13 @@ pudzu-utils = []
 pylint = [
     {file = "pylint-2.6.2-py3-none-any.whl", hash = "sha256:e71c2e9614a4f06e36498f310027942b0f4f2fde20aebb01655b31edc63b9eaf"},
     {file = "pylint-2.6.2.tar.gz", hash = "sha256:718b74786ea7ed07aa0c58bf572154d4679f960d26e9641cc1de204a30b87fc9"},
+]
+pymeeus = [
+    {file = "PyMeeus-0.3.13.tar.gz", hash = "sha256:43b800a2571f3237e558d8d305e97f6ac4027977666e22af98448e0f1f86af86"},
+]
+pytz = [
+    {file = "pytz-2021.1-py2.py3-none-any.whl", hash = "sha256:eb10ce3e7736052ed3623d49975ce333bcd712c7bb19a58b9e2089d4057d0798"},
+    {file = "pytz-2021.1.tar.gz", hash = "sha256:83a4a90894bf38e243cf052c8b58f381bfe9a7a483f6a9cab140bc7f702ac4da"},
 ]
 regex = [
     {file = "regex-2020.11.13-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:8b882a78c320478b12ff024e81dc7d43c1462aa4a3341c754ee65d857a521f85"},

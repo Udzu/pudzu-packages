@@ -78,6 +78,8 @@ enable = [
     "cell-var-from-loop",
     "continue-in-finally",
     "dangerous-default-value",
+    "differing-param-doc",
+    "differing-type-doc",
     "duplicate-argument-name",
     "duplicate-bases",
     "duplicate-except",

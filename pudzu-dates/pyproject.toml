@@ -18,6 +18,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.7"
 pudzu-utils = "^0.9.2"
+convertdate = { version = "^2.3.0", optional = true }
 
 [tool.poetry.dev-dependencies]
 mypy = "*"
@@ -26,6 +27,9 @@ black = { version = "*", allow-prereleases = true }
 isort = "*"
 taskipy = "*"
 pudzu-utils = { path = "../pudzu-utils", develop = true }
+
+[tool.poetry.extras]
+extras = ["convertdate"]
 
 [tool.taskipy.tasks]
 pylint = "pylint pudzu"
@@ -79,6 +83,8 @@ enable = [
     "cell-var-from-loop",
     "continue-in-finally",
     "dangerous-default-value",
+    "differing-param-doc",
+    "differing-type-doc",
     "duplicate-argument-name",
     "duplicate-bases",
     "duplicate-except",
