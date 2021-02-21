@@ -650,7 +650,7 @@ def artial(func, *args, **kwargs):
 # Strings
 
 
-def strip_from(str, *seps, last=False, ignore_case=False):
+def strip_from(string, *seps, last=False, ignore_case=False):
     """Strip everything from the first/last occurence of one of the seps."""
     flags = re.DOTALL | re.IGNORECASE * ignore_case
     regex = re.compile(
@@ -659,10 +659,10 @@ def strip_from(str, *seps, last=False, ignore_case=False):
         ),
         flags=flags,
     )
-    return re.sub(regex, r"\1", str)
+    return re.sub(regex, r"\1", string)
 
 
-def strip_after(str, *seps, last=False, ignore_case=False):
+def strip_after(string, *seps, last=False, ignore_case=False):
     """Strip everything after the first/last occurence of one of the seps."""
     flags = re.DOTALL | re.IGNORECASE * ignore_case
     regex = re.compile(
@@ -671,10 +671,10 @@ def strip_after(str, *seps, last=False, ignore_case=False):
         ),
         flags=flags,
     )
-    return re.sub(regex, r"\1", str)
+    return re.sub(regex, r"\1", string)
 
 
-def strip_to(str, *seps, last=False, ignore_case=False):
+def strip_to(string, *seps, last=False, ignore_case=False):
     """Strip everything to the first/last occurence of one of the seps."""
     flags = re.DOTALL | re.IGNORECASE * ignore_case
     regex = re.compile(
@@ -683,10 +683,10 @@ def strip_to(str, *seps, last=False, ignore_case=False):
         ),
         flags=flags,
     )
-    return re.sub(regex, r"\2", str)
+    return re.sub(regex, r"\2", string)
 
 
-def strip_before(str, *seps, last=False, ignore_case=False):
+def strip_before(string, *seps, last=False, ignore_case=False):
     """Strip everything before the first/last occurence of one of the seps."""
     flags = re.DOTALL | re.IGNORECASE * ignore_case
     regex = re.compile(
@@ -695,49 +695,49 @@ def strip_before(str, *seps, last=False, ignore_case=False):
         ),
         flags=flags,
     )
-    return re.sub(regex, r"\1", str)
+    return re.sub(regex, r"\1", string)
 
 
-def replace_any(str, substrings, new, count=0, ignore_case=False):
+def replace_any(string, substrings, new, count=0, ignore_case=False):
     """Replace any of substrings by new. New can be either a string or a function from matching
     string to string."""
     flags = re.DOTALL | re.IGNORECASE * ignore_case
     regex = re.compile("|".join(re.escape(old) for old in substrings), flags=flags)
     replacement = (lambda m: new(m.group(0))) if callable(new) else lambda m: new
-    return re.sub(regex, replacement, str, count=count)
+    return re.sub(regex, replacement, string, count=count)
 
 
-def strip_any(str, substrings, count=0, ignore_case=False):
+def strip_any(string, substrings, count=0, ignore_case=False):
     """Strip any of substrings."""
-    return replace_any(str, substrings, "", count=count, ignore_case=ignore_case)
+    return replace_any(string, substrings, "", count=count, ignore_case=ignore_case)
 
 
-def replace_map(str, mapping, count=0, ignore_case=False):
+def replace_map(string, mapping, count=0, ignore_case=False):
     """Replace substrings using a mapping."""
     if ignore_case:
         mapping = CaseInsensitiveDict(mapping)
     return replace_any(
-        str, mapping.keys(), lambda s: mapping[s], count=count, ignore_case=ignore_case
+        string, mapping.keys(), lambda s: mapping[s], count=count, ignore_case=ignore_case
     )
 
 
-def shortify(s, width, tail=5, placeholder="[...]", collapse_whitespace=True):
+def shortify(string, width, tail=5, placeholder="[...]", collapse_whitespace=True):
     """ Truncate a string to fit within a given width. A bit like textwrap.shorten."""
     if collapse_whitespace:
-        s = re.sub(r"\s+", " ", s)
+        string = re.sub(r"\s+", " ", string)
     if width < 2 * tail + len(placeholder):
         raise ValueError(
             "Width parameter {} too short for tail={} and placeholder='{}'".format(
                 width, tail, placeholder
             )
         )
-    elif len(s) <= width:
-        return s
+    elif len(string) <= width:
+        return string
     else:
-        return s[: width - tail - len(placeholder)] + placeholder + s[-tail:]
+        return string[: width - tail - len(placeholder)] + placeholder + string[-tail:]
 
 
-def strip_accents(str, aggressive=False, german=False):
+def strip_accents(string, aggressive=False, german=False):
     """Strip accents from a string. Default behaviour is to use NFD normalization
     (canonical decomposition) and strip combining characters. Aggressive mode also
     replaces ß with ss, l with l, ø with o and so on. German mode first replaces ö
@@ -761,8 +761,10 @@ def strip_accents(str, aggressive=False, german=False):
                 c = c.title()
             return c
 
-        str = "".join(german_strip(c, d) for c, d in generate_ngrams(str + " ", 2))
-    str = "".join(c for c in unicodedata.normalize("NFD", str) if not unicodedata.combining(c))
+        string = "".join(german_strip(c, d) for c, d in generate_ngrams(string + " ", 2))
+    string = "".join(
+        c for c in unicodedata.normalize("NFD", string) if not unicodedata.combining(c)
+    )
     if aggressive:
 
         @partial(ignoring_exceptions, handler=identity, exceptions=KeyError)
@@ -791,8 +793,8 @@ def strip_accents(str, aggressive=False, german=False):
                 return unicodedata.lookup(name[:variant])
             return c
 
-        str = "".join(aggressive_strip(c) for c in str)
-    return str
+        string = "".join(aggressive_strip(c) for c in string)
+    return string
 
 
 def substitute(text, _pattern=r"\{\{(.*?)\}\}", **kwargs):
