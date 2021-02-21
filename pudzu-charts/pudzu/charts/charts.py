@@ -1,8 +1,8 @@
 from enum import Enum
 from functools import reduce
-from itertools import chain
 from os.path import splitext
 
+import numpy as np
 import pandas as pd
 from pudzu.dates import *
 from pudzu.pillar import *
@@ -156,7 +156,7 @@ def bar_chart(
     legend_position=None,
     legend_fonts=None,
     legend_box_sizes=(40, 40),
-    legend_args={},
+    legend_args=None,
 ):
     """Plot a bar chart.
     - data (pandas dataframe): table to plot
@@ -365,7 +365,7 @@ def bar_chart(
             box_sizes.append(lsize_fn(c))
             labels.append(str(data.columns[c]))
         base_args = dict(boxes=boxes, labels=labels, box_sizes=box_sizes, font_family=legend_fonts, fg=fg, bg=bg)
-        legend = generate_legend(**merge_dicts(base_args, legend_args))
+        legend = generate_legend(**merge_dicts(base_args, legend_args or {}))
         chart = chart.place(hzimg(legend.pad(10, 0)), hzalign(lalign))
 
     # Keep track of offsets relative to chart
@@ -942,7 +942,7 @@ def grid_chart(
     euler_array = tmap_leafs(lambda _: None, img_array, base_factory=list)
     euler_bgs = {}
     for r, row in enumerate(data.values):
-        for c, v in enumerate(row):
+        for c, _ in enumerate(row):
 
             # image array
             base = Image.new("RGBA", (img_widths[c], img_heights[r]), tbg)

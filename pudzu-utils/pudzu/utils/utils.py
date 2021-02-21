@@ -13,7 +13,6 @@ import random
 import re
 import sys
 import threading
-import types
 import unicodedata
 from collections import Counter, OrderedDict, abc
 from enum import Enum
@@ -21,6 +20,7 @@ from functools import partial, wraps
 from inspect import signature
 from math import ceil, floor, log10
 from time import sleep
+from types import ModuleType
 from typing import Iterable, Mapping, Sequence
 from urllib.parse import urlparse
 
@@ -40,7 +40,7 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 # Imports
 
 
-class MissingModule(types.ModuleType):
+class MissingModule(ModuleType):
     def __getattr__(self, k):
         raise AttributeError(f"Missing module '{self.__name__}' has no attribute '{k}'")
 
@@ -101,8 +101,8 @@ class AlternativeModuleImporter(importlib.abc.PathEntryFinder):
 
     def find_spec(self, name, path=None, target=None):
         if self.INFIX in name:
-            first, second = name.split(self.INFIX, 1)
-            return importlib.util.find_spec(first) or importlib.util.find_spec(second)
+            first_spec, second_spec = name.split(self.INFIX, 1)
+            return importlib.util.find_spec(first_spec) or importlib.util.find_spec(second_spec)
         return None
 
 
@@ -490,10 +490,10 @@ def generate_batches(iterable, batch_size):
     """Generator that yields the elements of an iterable n at a time."""
     sourceiter = iter(iterable)
     while True:
-        slice = list(itertools.islice(sourceiter, batch_size))
-        if len(slice) == 0:
+        batch = list(itertools.islice(sourceiter, batch_size))
+        if len(batch) == 0:
             break
-        yield slice
+        yield batch
 
 
 def generate_ngrams(iterable, n):
@@ -975,7 +975,7 @@ class ValueMappingDict(abc.MutableMapping):
     def __init_subclass__(cls, value_mapping=None, base_factory=None, **kwargs):
         if value_mapping:
             cls.default_value_mapping = staticmethod(value_mapping)
-        if base_type:
+        if base_factory:
             cls.default_base_factory = staticmethod(base_factory)
         super().__init_subclass__(**kwargs)
 
@@ -1130,7 +1130,7 @@ def parameterized_method(method_suffixes=None, **kwargs):
 class MetaParameterized(type):
     """Metaclass to support parameterized class methods, decorated with @parameterized_method."""
 
-    def __new__(metacls, name, bases, attrs):
+    def __new__(cls, name, bases, attrs):
         for (n, fn) in [
             (n, fn) for (n, fn) in attrs.items() if hasattr(fn, "_parameterized_kwargs")
         ]:
@@ -1156,7 +1156,7 @@ class MetaParameterized(type):
                         ),
                     )
             del attrs[n]
-        return type.__new__(metacls, name, bases, attrs)
+        return type.__new__(cls, name, bases, attrs)
 
 
 # Switch statements (because why not)

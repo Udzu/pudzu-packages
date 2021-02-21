@@ -3,9 +3,8 @@ import logging
 import os
 import os.path
 import re
-from collections import namedtuple
-from enum import Enum
-from functools import partial, reduce
+from collections import abc, namedtuple
+from functools import partial
 from io import BytesIO
 from itertools import zip_longest
 from numbers import Integral, Real
@@ -103,7 +102,7 @@ class Padding:
         if isinstance(other, Padding):
             self.padding = list(other.padding)
         else:
-            raise TypeError("update expects another Padding object: got {}".format(padding))
+            raise TypeError("update expects another Padding object: got {}".format(other.padding))
 
     @property
     def l(self):
@@ -295,10 +294,10 @@ class NamedPaletteMeta(type):
     """Metaclass for defining named color palettes."""
 
     @classmethod
-    def __prepare__(metacls, name, bases, **kwds):
+    def __prepare__(cls, name, bases, **kwds):
         return OrderedDict()
 
-    def __new__(metacls, name, bases, classdict):
+    def __new__(cls, name, bases, classdict):
         colors = [
             (c, v)
             for c, v in classdict.items()
@@ -395,7 +394,6 @@ class _ImageDraw:
                 output += text[line_end:tok_end]
                 line_end = tok_end
             else:
-                hyphen_start = tok_start
                 for hyphen in hyphens(text[tok_start:tok_end]):
                     hopt = "" if text[tok_start + hyphen - 1] == "-" else "-"
                     if (
@@ -722,7 +720,7 @@ class _Image(Image.Image):
             text = ImageDraw.word_wrap(text, font, max_width, tokenizer, hyphenator)
         w, h = ImageDraw.text_size(text, font, spacing=line_spacing, beard_line=beard_line)
         if max_width is not None and w > max_width:
-            logger.warning("Text cropped as too wide to fit: {}".format(text))
+            logger.warning("Text cropped as too wide to fit: %s", text)
             w = max_width
         img = Image.new("RGBA", (w + padding.x, h + padding.y), bg)
         draw = ImageDraw.Draw(img)
@@ -985,7 +983,7 @@ class _Image(Image.Image):
         """Create an image from a url, optionally saving it to a filepath."""
         HEADERS = {"User-Agent": "Mozilla/5.0"}
         uparse = urlparse(url)
-        logger.debug("Reading image from {}".format(url))
+        logger.debug("Reading image from %s", url)
         if uparse.scheme == "":
             with open(url, "rb") as f:
                 content = f.read()
@@ -998,7 +996,7 @@ class _Image(Image.Image):
             return Image.open(fh)
         else:
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            logger.debug("Saving image to {}".format(filepath))
+            logger.debug("Saving image to %s", filepath)
             with open(filepath, "wb") as f:
                 f.write(content)
             with open(filepath + ".source", "w", encoding="utf-8") as f:
@@ -1010,7 +1008,7 @@ class _Image(Image.Image):
         """Create an image from a url, using a file cache."""
         filepath = os.path.join(cache_dir, filename or url_to_filepath(url))
         if os.path.isfile(filepath):
-            logger.debug("Loading cached image at {}".format(filepath))
+            logger.debug("Loading cached image at %s", filepath)
             img = Image.open(filepath)
         else:
             img = cls.from_url(url, filepath)
@@ -1510,9 +1508,9 @@ def font(name, size, bold=False, italics=False, **kwargs):
         else [[name + suffix for suffix in suffixes] for suffixes in SUFFIXES]
     )
     names = [list(generate_batches(variants, 2))[bold][italics] for variants in variants]
-    for name in names:
+    for n in names:
         try:
-            return ImageFont.truetype("{}.ttf".format(name), size, **kwargs)
+            return ImageFont.truetype("{}.ttf".format(n), size, **kwargs)
         except OSError:
             continue
     raise OSError(
@@ -1698,8 +1696,7 @@ class Diamond(ImageShape):
     def mask(cls, size, p=0.5, _scale=1.0):
         """Diamond-shaped mask with the left-right vertices p down from the top."""
         w, h = size
-        x, y, m, n = (
-            w - 1,
+        y, m, n = (
             h - 1,
             (w - 1) / 2,
             (abs(p * (h - 1)) if isinstance(p, float) else p * _scale),
@@ -1864,7 +1861,7 @@ class MarkupExpression:
                 parsed.append((re.sub(r"\\(.)", r"\1", pre), mode))
             if not match << re.match(cls.first_unescaped_match_regex(cls.START_END[start]), post):
                 raise ValueError("Unmatch ending for {} in {}".format(start, post))
-            content, end, text = match().groups()
+            content, _end, text = match().groups()
             parsed += cls.parse_markup(content, mode + cls.START_MODE[start])
         if text:
             parsed.append((re.sub(r"\\(.)", r"\1", text), mode))
