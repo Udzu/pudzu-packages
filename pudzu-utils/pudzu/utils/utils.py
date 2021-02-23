@@ -298,6 +298,7 @@ class cached_property(object):
         self.__doc__ = fn.__doc__
         self.fn = fn
         self.expires_after = expires_after
+        self.name = None
 
     def __set_name__(self, owner, name):
         self.name = name
@@ -346,11 +347,11 @@ def with_vars(**kwargs):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             oldthis = this()
-            this << fn
+            this.set(fn)
             try:
                 return fn(*args, **kwargs)
             finally:
-                this << oldthis
+                this.set(oldthis)
 
         return wrapper
 
@@ -817,10 +818,18 @@ class KeyEquivalenceDict(abc.MutableMapping):
     the key specified by key_choice."""
 
     locals().update(
-        Enum("KeyEquivalenceDict", "USE_FIRST_KEY USE_LAST_KEY USE_NORMALIZED_KEY").__members__
+        Enum(  # type: ignore[attr-defined]
+            "KeyEquivalenceDict", "USE_FIRST_KEY USE_LAST_KEY USE_NORMALIZED_KEY"
+        ).__members__
     )
 
-    def __init__(self, data=None, normalizer=identity, base_factory=dict, key_choice=USE_LAST_KEY):
+    def __init__(
+        self,
+        data=None,
+        normalizer=identity,
+        base_factory=dict,
+        key_choice=USE_LAST_KEY,  # type: ignore[name-defined]
+    ):  # pylint: disable=undefined-variable
         self.normalizer = getattr(self, "default_normalizer", normalizer)
         self.base_factory = getattr(self, "default_base_factory", base_factory)
         self.key_choice = getattr(self, "default_key_choice", key_choice)
@@ -1065,8 +1074,8 @@ def _Counter_random(self, filter=None):
     return _Counter_randoms(self, 1, filter=filter)[0]
 
 
-Counter.random_choices = _Counter_randoms
-Counter.random_choice = _Counter_random
+Counter.random_choices = _Counter_randoms  # type: ignore[attr-defined]
+Counter.random_choice = _Counter_random  # type: ignore[attr-defined]
 
 # Network/io
 
@@ -1180,6 +1189,9 @@ class switch:
         self.obj = obj
         self.predicates = predicates
         self.police_enums = police_enums
+        self.case = None
+        self.default = None
+        self.return_value = None
 
     def __enter__(self):
         self.case = self.Case()
@@ -1212,6 +1224,9 @@ class switch:
                 self.dispatch.update((a, fn) for a in self.args)
 
     class Default:
+        def __init__(self):
+            self.default = None
+
         def _set_default(self, val):
             if hasattr(self, "default"):
                 assert KeyError("Default case already present in switch statement")
