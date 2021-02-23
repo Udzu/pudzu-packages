@@ -7,6 +7,7 @@ from collections import abc, namedtuple
 from functools import partial
 from io import BytesIO
 from itertools import zip_longest
+from math import ceil
 from numbers import Integral, Real
 from urllib.parse import urlparse
 from urllib.request import urlopen
@@ -14,6 +15,7 @@ from urllib.request import urlopen
 import numpy as np
 from PIL import Image, ImageChops, ImageColor, ImageDraw, ImageFilter, ImageFont, ImageOps
 from pudzu.utils import *
+from pudzu.utils import identity, optional_import, optional_import_from, papply, raise_exception
 
 pyphen = optional_import("pyphen")
 requests = optional_import("requests")
@@ -34,8 +36,8 @@ class Alignment:
 
     def __init__(self, align):
         if isinstance(align, Real):
-            self.__init__((align, align))
-        elif non_string_sequence(align, Real) and len(align) == 2:
+            align = (align, align)
+        if non_string_sequence(align, Real) and len(align) == 2:
             if not all(0 <= x <= 1 for x in align):
                 raise ValueError("Alignment values should be between 0 and 1: got {}".format(align))
             self.xy = align
@@ -69,12 +71,12 @@ class Padding:
 
     def __init__(self, padding=0):
         if padding is None:
-            self.__init__((0, 0, 0, 0))
+            padding = (0, 0, 0, 0)
         elif isinstance(padding, Integral):
-            self.__init__((padding, padding, padding, padding))
+            padding = (padding, padding, padding, padding)
         elif non_string_sequence(padding, Integral) and len(padding) == 2:
-            self.__init__((padding[0], padding[1], padding[0], padding[1]))
-        elif non_string_sequence(padding, Integral) and len(padding) == 4:
+            padding = (padding[0], padding[1], padding[0], padding[1])
+        if non_string_sequence(padding, Integral) and len(padding) == 4:
             if not all(0 <= x for x in padding):
                 raise ValueError("Padding values should be positive: got {}".format(padding))
             self.padding = list(padding)
@@ -518,11 +520,11 @@ ImageColor.darken = _ImageColor.darken
 ImageColor.alpha_composite = _ImageColor.alpha_composite
 ImageColor.alpha_blend = _ImageColor.alpha_blend
 
-RGBA.to_hex = papply(ImageColor.to_hex)
-RGBA.blend = papply(ImageColor.blend)
-RGBA.brighten = papply(ImageColor.brighten)
-RGBA.darken = papply(ImageColor.darken)
-RGBA.alpha_blend = papply(ImageColor.alpha_blend)
+RGBA.to_hex = papply(ImageColor.to_hex)  # type: ignore[attr-defined]
+RGBA.blend = papply(ImageColor.blend)  # type: ignore[attr-defined]
+RGBA.brighten = papply(ImageColor.brighten)  # type: ignore[attr-defined]
+RGBA.darken = papply(ImageColor.darken)  # type: ignore[attr-defined]
+RGBA.alpha_blend = papply(ImageColor.alpha_blend)  # type: ignore[attr-defined]
 
 # Colormaps
 
@@ -692,7 +694,7 @@ class FunctionColormap:
 # Image
 
 
-class _Image(Image.Image):
+class _Image(Image.Image):  # pylint: disable=abstract-method
     @classmethod
     def from_text(
         cls,
@@ -1206,7 +1208,9 @@ class _Image(Image.Image):
             img = img.pad_to_aspect(img.width, height, align=align, bg=bg, offsets=offsets)
         return img
 
-    def resize(self, size, resample=Image.LANCZOS, *args, **kwargs):
+    def resize(
+        self, size, resample=Image.LANCZOS, *args, **kwargs
+    ):  # pylint: disable=signature-differs
         """Return a resized copy of the image, handling zero-width/height sizes and defaulting
         to LANCZOS resampling."""
         if size[0] == 0 or size[1] == 0:
@@ -1539,7 +1543,7 @@ sans = font_family("arial", "/usr/share/fonts/truetype/freefont/FreeSans")
 
 # Shapes
 
-
+# pylint: disable=arguments-differ
 class ImageShape(object):
     """Abstract base class for generating simple geometric shapes."""
 

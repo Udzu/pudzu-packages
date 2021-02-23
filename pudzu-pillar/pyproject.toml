@@ -42,7 +42,7 @@ image_extras = ["scipy", "requests"]
 text_extras = ["pyphen", "python-bidi", "arabic-reshaper"]
 
 [tool.taskipy.tasks]
-test = "pytest --pylint --mypy"
+tests = "pytest --pylint --mypy"
 format = "task isort && task black"
 mypy = "pytest --mypy -m mypy"
 pylint = "pytest --pylint -m pylint"
