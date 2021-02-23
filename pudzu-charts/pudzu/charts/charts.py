@@ -1,3 +1,5 @@
+# pylint: disable=line-too-long,blacklisted-name
+import logging
 from enum import Enum
 from functools import reduce
 from os.path import splitext
@@ -6,10 +8,13 @@ import numpy as np
 import pandas as pd
 from pudzu.dates import *
 from pudzu.pillar import *
+from pudzu.pillar import RGBA, Image, VegaPalette10
+from pudzu.utils import get_non, ignoring_extra_args
 
 # Random collection of Pillow-based charting functions
 
 logger = logging.getLogger("charts")
+
 
 # Legends
 
@@ -197,7 +202,7 @@ def bar_chart(
         if ymax is None:
             ymax = max(0, ceil_significant(data.values.max(), 1))
         if ymin >= ymax:
-            raise ValueError("Mininum y value {0:.3g} must be smaller than maximum y vaue {0:.3g}".format(ymin, ymax))
+            raise ValueError("Mininum y value {:.3g} must be smaller than maximum y vaue {:.3g}".format(ymin, ymax))
     elif type == BarChartType.STACKED:
         if data.values.min() < 0:
             raise ValueError("Stacked charts don't support negative values.")
@@ -209,7 +214,7 @@ def bar_chart(
             ymax = max(0, ceil_significant(maxsum, 1))
         elif ymax < maxsum:
             raise ValueError(
-                "Maximum y value {0:.3g} must be no smaller than maximum stack size {0:.3g}".format(ymax, maxsum)
+                "Maximum y value {:.3g} must be no smaller than maximum stack size {:.3g}".format(ymax, maxsum)
             )
     elif type == BarChartType.STACKED_PERCENTAGE:
         if data.values.min() < 0:
@@ -322,7 +327,7 @@ def bar_chart(
                 pbar = make_box(fill, (bar_width, positive_height_fn(v)))
                 nbar = make_box(fill, (bar_width, negative_height_fn(v)))
 
-            def with_inside_label(bar):
+            def with_inside_label(bar, c=c, r=r, v=v):
                 if BarChartLabelPosition.INSIDE in clabel_dict:
                     label = clabel_dict[BarChartLabelPosition.INSIDE](c, r, v, bar.width, bar.height)
                     if isinstance(label, str):
@@ -1224,7 +1229,7 @@ def generate_name_csv(map, presorted=(), sort=ImageMapSort.HORIZONTAL, overwrite
     """Generate a name csv skeleton, for use in map_chart."""
     if not overwrite and os.path.exists(name_csv_path(map)):
         raise Exception("Name csv file already exists.")
-    logger.info("Generating name CSV file at {}".format(name_csv_path(map)))
+    logger.info("Generating name CSV file at %s", name_csv_path(map))
     img = Image.open(map)
     if sort == ImageMapSort.USAGE:
         cols = [c for _, c in sorted(img.getcolors(), reverse=True)]
@@ -1249,7 +1254,7 @@ def generate_bbox_csv(map, labels=True):
     """Generate a bounding box csv either for labels or for the map itself, for use in map_chart."""
     csv_path = labelbox_csv_path(map) if labels else boundingbox_csv_path(map)
     img = Image.open(labelbox_img_path(map) if labels else map)
-    logger.info("Generating bounding box CSV file at {}".format(csv_path))
+    logger.info("Generating bounding box CSV file at %s", csv_path)
     data = np.array(img)
     xmin, xmax, ymin, ymax = {}, {}, {}, {}
     for y, row in enumerate(data):
@@ -1321,20 +1326,20 @@ def map_chart(
     img = Image.open(map)
     try:
         df = load_name_csv(map)
-        logger.info("Using color name file {}".format(name_csv_path(map)))
+        logger.info("Using color name file %s", name_csv_path(map))
         namemap = {tuple(d["color"]): d["name"] for _, d in df.iterrows()}
         labelaligns = {
             tuple(d["color"])[:3]: unmake_sequence(tmap(float, str(get_non(d, "label_align", "0.5")).split("|")))
             for _, d in df.iterrows()
         }
     except FileNotFoundError:
-        logger.warning("No color name file found at {}".format(name_csv_path(map)))
+        logger.warning("No color name file found at %s", name_csv_path(map))
         namemap = {}
     try:
         df = load_boundingbox_csv(map)
         bboxes = {tuple(d["color"]): BoundingBox(d["bbox"]) for _, d in df.iterrows()}
     except FileNotFoundError:
-        logger.warning("No bounding box file found at {}".format(boundingbox_csv_path(map)))
+        logger.warning("No bounding box file found at %s", boundingbox_csv_path(map))
         bboxes = {}
 
     # generate map
@@ -1345,7 +1350,7 @@ def map_chart(
         color = (
             ignoring_extra_args(color_fn)(name, bbox.width, bbox.height) if callable(color_fn) else color_fn.get(name)
         )
-        logger.debug("Filling {} with {}".format(name, color))
+        logger.debug("Filling %s with %s", name, color)
         if color is None:
             continue
         mask = original.select_color(c)
@@ -1363,13 +1368,13 @@ def map_chart(
     labelled = set()
     if label_fn is not None:
         df = load_labelbox_csv(map)
-        logger.info("Using label bounding box file {}".format(labelbox_csv_path(map)))
+        logger.info("Using label bounding box file %s", labelbox_csv_path(map))
         labelboxes = {tuple(d["color"]): BoundingBox(d["bbox"]) for _, d in df.iterrows()}
         for c, name in colors:
             c = c[:3]
             if c not in labelboxes:
                 if ignoring_extra_args(label_fn)(name, img.width, img.height) is not None:
-                    logger.warning("No label location found for {}".format(name))
+                    logger.warning("No label location found for %s", name)
                 continue
             label = (
                 ignoring_extra_args(label_fn)(name, labelboxes[c].width, labelboxes[c].height)
@@ -1382,9 +1387,12 @@ def map_chart(
                 label = Image.from_text(label, label_font, label_color)
             if label.width > labelboxes[c].width or label.height > labelboxes[c].height:
                 logger.warning(
-                    "{}x{} label for {} too small to fit {}x{} bounding box".format(
-                        label.width, label.height, name, labelboxes[c].width, labelboxes[c].height
-                    )
+                    "%dx%d label for %s too small to fit %dx%d bounding box",
+                    label.width,
+                    label.height,
+                    name,
+                    labelboxes[c].width,
+                    labelboxes[c].height,
                 )
             else:
                 labelled.add(c)
@@ -1393,11 +1401,11 @@ def map_chart(
 
     # add overlay
     if os.path.exists(overlay_img_path(map)):
-        logger.info("Using overlay image file {}".format(overlay_img_path(map)))
+        logger.info("Using overlay image file %s", overlay_img_path(map))
         ov = Image.open(overlay_img_path(map))
         mask = None
         if os.path.exists(overlay_mask_img_path(map)):
-            logger.info("Using overlay mask file {}".format(overlay_mask_img_path(map)))
+            logger.info("Using overlay mask file %s", overlay_mask_img_path(map))
             ovmask = Image.open(overlay_mask_img_path(map))
             mask = Image.new("1", ov.size, "black")
             overlays = labelled if overlay_fn is None else [c for c, name in colors if overlay_fn(name)]
@@ -1549,7 +1557,7 @@ def month_chart(
         weekday_imgs = []
         for day in itertools.islice(fullrange, week_length):
             if day not in month:
-                day += DateFilter(lambda d: d.weekday == day.weekday and d in month)
+                day += DateFilter(lambda d, day=day: d.weekday == day.weekday and d in month)
             fnargs = (day, cell_width, weekday_height)
             weekday_bg, weekday_label, weekday_overlay = (
                 weekday_bg_fn(*fnargs),
