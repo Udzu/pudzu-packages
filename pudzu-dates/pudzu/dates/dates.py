@@ -5,8 +5,10 @@ from collections import namedtuple
 from enum import Enum
 from functools import reduce, total_ordering
 from numbers import Integral
+from typing import Sequence
 
 from pudzu.utils import *
+from pudzu.utils import optional_import, partial
 
 cdate = optional_import("convertdate")
 
@@ -30,7 +32,15 @@ class Calendar(object):
 
     __metaclass__ = ABC.ABCMeta
 
-    WEEKDAYS = ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+    WEEKDAYS: Sequence[str] = (
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+    )
 
     # Formatting
     @property
