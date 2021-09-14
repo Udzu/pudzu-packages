@@ -387,6 +387,8 @@ class _ImageDraw:
     def word_wrap(cls, text, font, max_width, tokenizer=whitespace_span_tokenize, hyphenator=None):
         """Returns a word-wrapped string from text that would fit inside the given max_width with
         the given font. Uses a span-based tokenizer and optional position-based hyphenator."""
+        if not text:
+            return text
         spans = list(tokenizer(text))
         line_start, line_end = 0, spans[0][0]
         output = text[line_start:line_end]
@@ -707,6 +709,7 @@ class _Image(Image.Image):  # pylint: disable=abstract-method
         beard_line=False,
         align="left",
         max_width=None,
+        soft_max_width=False,
         tokenizer=whitespace_span_tokenize,
         hyphenator=None,
         bidi_reshape=True,
@@ -721,7 +724,7 @@ class _Image(Image.Image):  # pylint: disable=abstract-method
         if max_width is not None:
             text = ImageDraw.word_wrap(text, font, max_width, tokenizer, hyphenator)
         w, h = ImageDraw.text_size(text, font, spacing=line_spacing, beard_line=beard_line)
-        if max_width is not None and w > max_width:
+        if max_width is not None and w > max_width and not soft_max_width:
             logger.warning("Text cropped as too wide to fit: %s", text)
             w = max_width
         img = Image.new("RGBA", (w + padding.x, h + padding.y), bg)
