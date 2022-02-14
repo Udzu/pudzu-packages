@@ -741,7 +741,7 @@ def shortify(string, width, tail=5, placeholder="[...]", collapse_whitespace=Tru
 def strip_accents(string, aggressive=False, german=False):
     """Strip accents from a string. Default behaviour is to use NFD normalization
     (canonical decomposition) and strip combining characters. Aggressive mode also
-    replaces ß with ss, l with l, ø with o and so on. German mode first replaces ö
+    replaces ß with ss, ł with l, ø with o and so on. German mode first replaces ö
     with oe, etc."""
     if german:
 
@@ -778,20 +778,15 @@ def strip_accents(string, aggressive=False, german=False):
                     "æ": "ae",
                     "Œ": "OE",
                     "œ": "oe",
-                    "Ĳ": "IJ",
-                    "ĳ": "ij",
-                    "ﬀ": "ff",
-                    "ﬃ": "ffi",
-                    "ﬄ": "ffl",
-                    "ﬁ": "fi",
-                    "ﬂ": "fl",
                 }
             if c in extra_conversions:
                 return extra_conversions[c]
-            name = unicodedata.name(c, "")
-            variant = name.find(" WITH ")
-            if variant:
-                return unicodedata.lookup(name[:variant])
+            elif unicodedata.category(c).startswith("L"):
+                name = unicodedata.name(c, "")
+                if " WITH " in name:
+                    return unicodedata.lookup(name[:name.find(" WITH ")])
+                elif " LIGATURE " in name:
+                    return unicodedata.normalize("NFKD", c)
             return c
 
         string = "".join(aggressive_strip(c) for c in string)
