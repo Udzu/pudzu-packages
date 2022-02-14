@@ -21,15 +21,19 @@ Padding(l=10, u=10, r=10, d=10)
 Padding(l=10, u=0, r=10, d=0)
 >> Padding((10,0,0,5)) + Padding((0,10,0,0))
 Padding(l=10, u=10, r=0, d=5)
+>> Padding(l=10, u=10, r=0, d=5)
+Padding(l=10, u=10, r=0, d=5)
 ```
 
 **Alignment**: a class representing element alignment, initialized from one or two floats between 0 and 1. Any function below that has an element alignment parameter can be passed one of these.
 
 ```python
 >> Alignment(0.5)
-Alignment(x=50%, y=50%)
+Alignment(x=0.5, y=0.5)
 >> Alignment((0,1))
-Alignment(x=0%, y=100%)
+Alignment(x=0, y=1)
+>> Alignment(x=0, y=1)
+Alignment(x=0.5, y=0.5)
 ```
 
 **RGBA**: named tuple representing RGBA colors. Can be initialised by name, integer values, float values, hex strings or keyword arguments.

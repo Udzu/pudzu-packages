@@ -34,7 +34,13 @@ logger.setLevel(logging.DEBUG)
 class Alignment:
     """Alignment class, initialized from one or two floats between 0 and 1."""
 
-    def __init__(self, align):
+    def __init__(self, align=None, x=None, y=None):
+        if any(x is not None for x in (x, y)):
+            if align is not None:
+                raise ValueError("Cannot specify both align and xy values")
+            align = (x, y)
+        if align is None:
+            raise ValueError("Must specify either align or xy values")
         if isinstance(align, Real):
             align = (align, align)
         if non_string_sequence(align, Real) and len(align) == 2:
@@ -49,7 +55,7 @@ class Alignment:
             )
 
     def __repr__(self):
-        return "Alignment(x={:.0f}%, y={:.0f}%)".format(self.x * 100, self.y * 100)
+        return "Alignment(x={}, y={})".format(self.x, self.y)
 
     def __getitem__(self, key):
         return self.xy[key]
@@ -69,7 +75,11 @@ class Alignment:
 class Padding:
     """Padding class, initialized from one, two or four integers."""
 
-    def __init__(self, padding=0):
+    def __init__(self, padding=None, l=None, u=None, r=None, d=None):
+        if any(x is not None for x in (l, u, r, d)):
+            if padding is not None:
+                raise ValueError("Cannot specify both padding and lurd values")
+            padding = (l, u, r, d)
         if padding is None:
             padding = (0, 0, 0, 0)
         elif isinstance(padding, Integral):
@@ -224,15 +234,15 @@ class RGBA(namedtuple("RGBA", ["red", "green", "blue", "alpha"])):
     values or hex strings."""
 
     def __new__(cls, *color, red=None, green=None, blue=None, alpha=None):
-        if any([red, green, blue, alpha]):
+        if any(x is not None for x in[red, green, blue, alpha]):
             if color:
                 raise ValueError(
                     "Invalid RGBA parameters: specify either positional or keyword arguments, "
                     "not both"
                 )
-            elif not all([red, green, blue]):
+            elif not all(x is not None for x in [red, green, blue]):
                 raise ValueError("Invalid RGBA parameters: missing R/G/B value")
-            color = [c for c in (red, green, blue, alpha) if c]
+            color = [c for c in (red, green, blue, alpha) if c is not None]
         rgba = color
         if len(rgba) == 1:
             if not rgba[0]:
