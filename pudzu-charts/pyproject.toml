@@ -11,13 +11,13 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7"
+    "Programming Language :: Python :: 3.8"
 ]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.7"
-pandas = "^1.0"
+python = "^3.8"
+pandas = "^1.4"
 pudzu-utils = "^0.9.2"
 pudzu-dates = "^0.9.1"
 pudzu-pillar = "^0.9.2"
