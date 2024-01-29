@@ -463,8 +463,7 @@ class _ImageColor:
         """Blend two colours with sRGB gamma correction."""
         color1, color2 = RGBA(color1), RGBA(color2)
         srgb_dims = 3 * int(linear_conversion)
-        return RGBA(
-            *[
+        rgba = [
                 fl(tl(c1) + (tl(c2) - tl(c1)) * p)
                 for c1, c2, fl, tl in zip_longest(
                     color1,
@@ -474,7 +473,8 @@ class _ImageColor:
                     fillvalue=round,
                 )
             ]
-        )
+        rgba = [clip(x, 0, 255) for x in rgba]
+        return RGBA(*rgba)
 
     @classmethod
     def brighten(cls, color, p, linear_conversion=True):
@@ -558,7 +558,7 @@ class SequenceColormap:
             raise ValueError("Colormap intervals must be positive")
         self.cmaps = cmaps
         self.intervals = [x / sum(intervals) for x in intervals]
-        self.accumulated = [0] + list(itertools.accumulate(self.intervals))
+        self.accumulated = [math.fsum(self.intervals[:i]) for i in range(len(intervals))] + [1.]
 
     def __repr__(self):
         return "SequenceColormap({})".format(
