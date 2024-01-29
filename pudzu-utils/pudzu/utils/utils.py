@@ -702,6 +702,8 @@ def strip_before(string, *seps, last=False, ignore_case=False):
 def replace_any(string, substrings, new, count=0, ignore_case=False):
     """Replace any of substrings by new. New can be either a string or a function from matching
     string to string."""
+    if len(substrings) == 0:
+        return string
     flags = re.DOTALL | re.IGNORECASE * ignore_case
     regex = re.compile("|".join(re.escape(old) for old in substrings), flags=flags)
     replacement = (lambda m: new(m.group(0))) if callable(new) else lambda m: new
