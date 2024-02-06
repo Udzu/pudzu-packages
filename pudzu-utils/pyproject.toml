@@ -6,7 +6,7 @@ packages = [{ include = "pudzu" }]
 keywords = ["pudzu", "utilities"]
 
 authors = ["Uri Granta <uri.granta+python@gmail.com>"]
-homepage = "https://github.com/Udzu/pudzu-packages/pudzu-utils/"
+homepage = "https://github.com/Udzu/pudzu-packages/blob/master/pudzu-utils/"
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
