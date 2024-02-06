@@ -19,5 +19,18 @@ from pudzu.pillar import ImageDraw, sans
     ],
 )
 def test_text_size_height(text, params, height):
-    x, y = ImageDraw.text_size(text, sans(16), **params)
+    _, y = ImageDraw.text_size(text, sans(16), **params)
     assert y == height
+
+
+@pytest.mark.parametrize(
+    "text,params,width",
+    [
+        [" ", {}, 4],
+        ["a", {}, 9],
+        ["A", {}, 12],
+    ],
+)
+def test_text_size_width(text, params, width):
+    x, _ = ImageDraw.text_size(text, sans(16), **params)
+    assert x == width

@@ -396,22 +396,22 @@ def language_hyphenator(lang="en_EN"):
 class _ImageDraw:
     _emptyImage = Image.new("RGBA", (0, 0))
     _emptyDraw = ImageDraw.Draw(_emptyImage)
-    _textsize = _emptyDraw.textsize
+
+    @classmethod
+    def _textsize(cls, text, font, *args, **kwargs):
+        return cls._emptyDraw.textbbox((0, 0), text, font, *args, **kwargs)[-2:]
 
     @classmethod
     def text_size(cls, text, font, beard_line=False, *args, **kwargs):
-        """Return the size of a given string in pixels. Same as ImageDraw.Draw.textsize but
-        doesn't require a drawable object, and handles descenders on multiline text and negative
-        horizontal offsets. Setting beard_line makes the height include the beard line even if
-        there are no descenders."""
+        """Return the size of a given string in pixels. Based on ImageDraw.Draw.textbbox but
+        doesn't require a drawable object, and includes negative horizontal offsets. Setting
+        beard_line makes the height include the beard line even if there are no descenders."""
         x, y = cls._textsize(text, font, *args, **kwargs)
         lines = text.split("\n")
-        last_height = cls._textsize(lines[-1], font, *args, **kwargs)[1]
-        if len(lines) > 1:
-            y += last_height - cls._textsize("A", font)[1]
         if beard_line:
+            last_height = cls._textsize(lines[-1], font, *args, **kwargs)[1]
             y += cls._textsize("y", font)[1] - last_height
-        x += -min(0, min(font.getoffset(line)[0] for line in lines))
+        x += -min(0, min(font.getbbox(line)[0] for line in lines))
         return x, y
 
     @classmethod
