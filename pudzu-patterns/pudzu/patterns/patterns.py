@@ -1332,7 +1332,7 @@ class Pattern:
         return self.nfa.example(min_length, max_length)
 
     # parsing (should really go via an AST here)
-    from pyparsing import Forward, Group, Literal, OneOrMore
+    from pyparsing import Forward, Group, Literal, OneOrMore  # type: ignore[misc]
     from pyparsing import Optional as Option
     from pyparsing import (  # type: ignore[misc]
         ParserElement,
