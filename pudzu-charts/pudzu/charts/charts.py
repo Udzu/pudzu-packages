@@ -232,11 +232,11 @@ def bar_chart(
         rlabels = {rlabels: ...}
     clabel_dict = make_mapping(
         clabels,
-        lambda: BarChartLabelPosition.AXIS
-        if type == BarChartType.SIMPLE
-        else BarChartLabelPosition.OUTSIDE
-        if type == BarChartType.OVERLAYED
-        else BarChartLabelPosition.INSIDE,
+        lambda: (
+            BarChartLabelPosition.AXIS
+            if type == BarChartType.SIMPLE
+            else BarChartLabelPosition.OUTSIDE if type == BarChartType.OVERLAYED else BarChartLabelPosition.INSIDE
+        ),
     )
     rlabel_dict = make_mapping(rlabels, lambda: BarChartLabelPosition.BELOW)
     clabel_dict = valmap((lambda v: (lambda c, r, v: default_format(v)) if v == Ellipsis else v), clabel_dict)
@@ -867,11 +867,11 @@ def grid_chart(
 
     img_array = [[cell_fn(v, r, c) for c, v in enumerate(row)] for r, row in enumerate(data.values)]
     img_array = tmap_leafs(
-        lambda s: s
-        if isinstance(s, Image.Image)
-        else Image.from_text(s, label_font, fg=fg, bg=bg, padding=2)
-        if label_font and s
-        else None,
+        lambda s: (
+            s
+            if isinstance(s, Image.Image)
+            else Image.from_text(s, label_font, fg=fg, bg=bg, padding=2) if label_font and s else None
+        ),
         img_array,
         base_factory=list,
     )
@@ -888,22 +888,32 @@ def grid_chart(
     group_fg_col_fn = (
         group_fg_colors
         if callable(group_fg_colors)
-        else (lambda g: group_fg_colors[g])
-        if isinstance(group_fg_colors, Mapping)
-        else (lambda g: group_fg_colors[groups.index(g)])
-        if non_string_sequence(group_fg_colors)
-        else (lambda g: group_fg_colors)
+        else (
+            (lambda g: group_fg_colors[g])
+            if isinstance(group_fg_colors, Mapping)
+            else (
+                (lambda g: group_fg_colors[groups.index(g)])
+                if non_string_sequence(group_fg_colors)
+                else (lambda g: group_fg_colors)
+            )
+        )
     )
     group_bg_col_fn = (
         group_fg_col_fn
         if group_bg_colors is None
-        else (lambda g: ignoring_extra_args(group_bg_colors)(g, RGBA(group_fg_col_fn(g))))
-        if callable(group_bg_colors)
-        else (lambda g: group_bg_colors[g])
-        if isinstance(group_bg_colors, Mapping)
-        else (lambda g: group_bg_colors[groups.index(g)])
-        if non_string_sequence(group_bg_colors)
-        else (lambda g: group_bg_colors)
+        else (
+            (lambda g: ignoring_extra_args(group_bg_colors)(g, RGBA(group_fg_col_fn(g))))
+            if callable(group_bg_colors)
+            else (
+                (lambda g: group_bg_colors[g])
+                if isinstance(group_bg_colors, Mapping)
+                else (
+                    (lambda g: group_bg_colors[groups.index(g)])
+                    if non_string_sequence(group_bg_colors)
+                    else (lambda g: group_bg_colors)
+                )
+            )
+        )
     )
 
     def group_cmp(group, *same, diff=()):
@@ -1504,9 +1514,7 @@ def month_chart(
         return ignoring_extra_args(
             label
             if callable(label)
-            else (lambda d: d.date_format(label))
-            if isinstance(label, str)
-            else (lambda d: label)
+            else (lambda d: d.date_format(label)) if isinstance(label, str) else (lambda d: label)
         )
 
     day_label_fn = make_label_fn(day_label)

@@ -69,7 +69,6 @@ def optional_import_from(module, identifier, default=None):
 
 
 class OptionalModuleImporter(importlib.abc.PathEntryFinder, importlib.abc.Loader):
-
     SUFFIX = "_OPTIONAL"
     PATH_TRIGGER = "OptionalModuleImporterPathTrigger"
 
@@ -91,7 +90,6 @@ class OptionalModuleImporter(importlib.abc.PathEntryFinder, importlib.abc.Loader
 
 
 class AlternativeModuleImporter(importlib.abc.PathEntryFinder):
-
     INFIX = "_OR_"
     PATH_TRIGGER = "AlternativeModuleImporterPathTrigger"
 
@@ -107,7 +105,6 @@ class AlternativeModuleImporter(importlib.abc.PathEntryFinder):
 
 
 class VersionModuleImporter(importlib.abc.PathEntryFinder):
-
     REGEX = r"^(?P<base>.+)_V(?P<version>[0-9]+(?:_[0-9]+)*)$"
     PATH_TRIGGER = "VersionModuleImporterPathTrigger"
 
@@ -318,9 +315,9 @@ class cached_property(object):
             if self.expires_after is None:
                 instance._property_cache_expiration_times[self.name] = datetime.datetime.max
             else:
-                instance._property_cache_expiration_times[
-                    self.name
-                ] = datetime.datetime.now() + datetime.timedelta(seconds=self.expires_after)
+                instance._property_cache_expiration_times[self.name] = (
+                    datetime.datetime.now() + datetime.timedelta(seconds=self.expires_after)
+                )
         return instance._property_cache_values[self.name]
 
     def __delete__(self, instance):
@@ -725,7 +722,7 @@ def replace_map(string, mapping, count=0, ignore_case=False):
 
 
 def shortify(string, width, tail=5, placeholder="[...]", collapse_whitespace=True):
-    """ Truncate a string to fit within a given width. A bit like textwrap.shorten."""
+    """Truncate a string to fit within a given width. A bit like textwrap.shorten."""
     if collapse_whitespace:
         string = re.sub(r"\s+", " ", string)
     if width < 2 * tail + len(placeholder):
@@ -786,7 +783,7 @@ def strip_accents(string, aggressive=False, german=False):
             elif unicodedata.category(c).startswith("L"):
                 name = unicodedata.name(c, "")
                 if " WITH " in name:
-                    return unicodedata.lookup(name[:name.find(" WITH ")])
+                    return unicodedata.lookup(name[: name.find(" WITH ")])
                 elif " LIGATURE " in name:
                     return unicodedata.normalize("NFKD", c)
             return c
@@ -839,7 +836,7 @@ class KeyEquivalenceDict(abc.MutableMapping):
             for k, v in data.items():
                 self.__setitem__(k, v)
         elif isinstance(data, abc.Iterable):
-            for (k, v) in data:
+            for k, v in data:
                 self.__setitem__(k, v)
         elif data is not None:
             raise TypeError(f"'{type(data).__name__}' object is not iterable")
@@ -951,7 +948,7 @@ class ValueMappingDict(abc.MutableMapping):
             for k, v in data.items():
                 self.__setitem__(k, v)
         elif isinstance(data, abc.Iterable):
-            for (k, v) in data:
+            for k, v in data:
                 self.__setitem__(k, v)
         elif data is not None:
             raise TypeError("'{}' object is not iterable".format(type(data).__name__))
@@ -1021,7 +1018,7 @@ def round_significant(x, n=1):
 
 def floor_digits(x, n=0):
     """Floor x to n decimal digits."""
-    return floor(x * 10 ** n) / 10 ** n
+    return floor(x * 10**n) / 10**n
 
 
 def floor_significant(x, n=1):
@@ -1031,7 +1028,7 @@ def floor_significant(x, n=1):
 
 def ceil_digits(x, n=0):
     """Ceil x to n decimal digits."""
-    return ceil(x * 10 ** n) / 10 ** n
+    return ceil(x * 10**n) / 10**n
 
 
 def ceil_significant(x, n=1):
@@ -1136,10 +1133,8 @@ def parameterized_method(method_suffixes=None, **kwargs):
 class MetaParameterized(type):
     """Metaclass to support parameterized class methods, decorated with @parameterized_method."""
 
-    def __new__(cls, name, bases, attrs):
-        for (n, fn) in [
-            (n, fn) for (n, fn) in attrs.items() if hasattr(fn, "_parameterized_kwargs")
-        ]:
+    def __new__(mcs, name, bases, attrs):
+        for n, fn in [(n, fn) for (n, fn) in attrs.items() if hasattr(fn, "_parameterized_kwargs")]:
             kwargs = fn._parameterized_kwargs
             suffixes = fn._parameterized_suffixes or itertools.repeat(None)
             for psuffix, pvalues in zip(suffixes, zip(*list(kwargs.values()))):
@@ -1162,7 +1157,7 @@ class MetaParameterized(type):
                         ),
                     )
             del attrs[n]
-        return type.__new__(cls, name, bases, attrs)
+        return type.__new__(mcs, name, bases, attrs)
 
 
 # Switch statements (because why not)
@@ -1198,11 +1193,13 @@ class switch:
     class Case:
         def __init__(self):
             self.dispatch = ValueMappingDict(
-                lambda d, k, v: raise_exception(
-                    KeyError("Key {} already present in switch statement".format(k))
-                )
-                if k in d
-                else v,
+                lambda d, k, v: (
+                    raise_exception(
+                        KeyError("Key {} already present in switch statement".format(k))
+                    )
+                    if k in d
+                    else v
+                ),
                 base_factory=OrderedDict,
             )
 
@@ -1236,7 +1233,6 @@ class switch:
             self._set_default(fn)
 
     def __exit__(self, exc_type, exc_value, traceback):
-
         if exc_type is not None:
             return
 

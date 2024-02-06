@@ -172,7 +172,6 @@ enable = [
     "syntax-error",
     "too-few-format-args",
     "too-many-format-args",
-    "too-many-function-args",
     "too-many-star-expressions",
     "trailing-comma-tuple",
     "trailing-newlines",

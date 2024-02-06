@@ -234,7 +234,7 @@ class RGBA(namedtuple("RGBA", ["red", "green", "blue", "alpha"])):
     values or hex strings."""
 
     def __new__(cls, *color, red=None, green=None, blue=None, alpha=None):
-        if any(x is not None for x in[red, green, blue, alpha]):
+        if any(x is not None for x in [red, green, blue, alpha]):
             if color:
                 raise ValueError(
                     "Invalid RGBA parameters: specify either positional or keyword arguments, "
@@ -270,11 +270,11 @@ class NamedPalette(abc.Sequence):
     def __init__(self, colors):
         self._colors_ = ValueMappingDict(
             colors,
-            value_mapping=lambda d, k, v: raise_exception(
-                KeyError("{} already present in named palette".format(k))
-            )
-            if k in d
-            else RGBA(v),
+            value_mapping=lambda d, k, v: (
+                raise_exception(KeyError("{} already present in named palette".format(k)))
+                if k in d
+                else RGBA(v)
+            ),
             base_factory=partial(CaseInsensitiveDict, base_factory=OrderedDict),
         )
         for c, v in self._colors_.items():
@@ -306,10 +306,10 @@ class NamedPaletteMeta(type):
     """Metaclass for defining named color palettes."""
 
     @classmethod
-    def __prepare__(cls, name, bases, **kwds):
+    def __prepare__(mcs, name, bases, **kwds):
         return OrderedDict()
 
-    def __new__(cls, name, bases, classdict):
+    def __new__(mcs, name, bases, classdict):
         colors = [
             (c, v)
             for c, v in classdict.items()
@@ -372,7 +372,6 @@ def language_hyphenator(lang="en_EN"):
 
 
 class _ImageDraw:
-
     _emptyImage = Image.new("RGBA", (0, 0))
     _emptyDraw = ImageDraw.Draw(_emptyImage)
     _textsize = _emptyDraw.textsize
@@ -403,7 +402,7 @@ class _ImageDraw:
         line_start, line_end = 0, spans[0][0]
         output = text[line_start:line_end]
         hyphens = lambda s: ([] if hyphenator is None else hyphenator(s)) + [len(s)]
-        for (tok_start, tok_end) in spans:
+        for tok_start, tok_end in spans:
             if cls.text_size(text[line_start:tok_end], font)[0] < max_width:
                 output += text[line_end:tok_end]
                 line_end = tok_end
@@ -464,15 +463,15 @@ class _ImageColor:
         color1, color2 = RGBA(color1), RGBA(color2)
         srgb_dims = 3 * int(linear_conversion)
         rgba = [
-                fl(tl(c1) + (tl(c2) - tl(c1)) * p)
-                for c1, c2, fl, tl in zip_longest(
-                    color1,
-                    color2,
-                    [cls.from_linear] * srgb_dims,
-                    [cls.to_linear] * srgb_dims,
-                    fillvalue=round,
-                )
-            ]
+            fl(tl(c1) + (tl(c2) - tl(c1)) * p)
+            for c1, c2, fl, tl in zip_longest(
+                color1,
+                color2,
+                [cls.from_linear] * srgb_dims,
+                [cls.to_linear] * srgb_dims,
+                fillvalue=round,
+            )
+        ]
         rgba = [clip(x, 0, 255) for x in rgba]
         return RGBA(*rgba)
 
@@ -558,7 +557,7 @@ class SequenceColormap:
             raise ValueError("Colormap intervals must be positive")
         self.cmaps = cmaps
         self.intervals = [x / sum(intervals) for x in intervals]
-        self.accumulated = [math.fsum(self.intervals[:i]) for i in range(len(intervals))] + [1.]
+        self.accumulated = [math.fsum(self.intervals[:i]) for i in range(len(intervals))] + [1.0]
 
     def __repr__(self):
         return "SequenceColormap({})".format(
@@ -780,9 +779,11 @@ class _Image(Image.Image):  # pylint: disable=abstract-method
             )
         bgs = [bg if bg is not None else RGBA(fg)._replace(alpha=0) for fg, bg in zip(fgs, bgs)]
         imgs = [
-            cls.from_text(text, font, fg, bg, beard_line=beard_line, bidi_reshape=bidi_reshape)
-            if isinstance(text, str)
-            else text.remove_transparency(bg)
+            (
+                cls.from_text(text, font, fg, bg, beard_line=beard_line, bidi_reshape=bidi_reshape)
+                if isinstance(text, str)
+                else text.remove_transparency(bg)
+            )
             for text, font, fg, bg in zip(texts, fonts, fgs, bgs)
         ]
         ascents = [
@@ -797,16 +798,20 @@ class _Image(Image.Image):  # pylint: disable=abstract-method
         max_height = max(img.height for img in imgs)
         imgs = [img.pad((0, 0, 0, max_height - img.height), bg) for img, bg in zip(imgs, bgs)]
         imgs = [
-            img
-            if not underline
-            else img.overlay(Rectangle((img.width, underline), fg), (0, max_ascent))
+            (
+                img
+                if not underline
+                else img.overlay(Rectangle((img.width, underline), fg), (0, max_ascent))
+            )
             for img, fg, underline in zip(imgs, fgs, underlines)
         ]
         imgs = [
-            img
-            if not strikethrough
-            else img.overlay(
-                Rectangle((img.width, strikethrough), fg), (0, max_ascent - round(ascent * 0.4))
+            (
+                img
+                if not strikethrough
+                else img.overlay(
+                    Rectangle((img.width, strikethrough), fg), (0, max_ascent - round(ascent * 0.4))
+                )
             )
             for img, fg, ascent, strikethrough in zip(imgs, fgs, ascents, strikethroughs)
         ]
@@ -1556,6 +1561,7 @@ sans = font_family("arial", "/usr/share/fonts/truetype/freefont/FreeSans")
 
 # Shapes
 
+
 # pylint: disable=arguments-differ
 class ImageShape(object):
     """Abstract base class for generating simple geometric shapes."""
@@ -1654,7 +1660,7 @@ class Ellipse(ImageShape):
         w, h = size
         rx, ry = (w - 1) / 2, (h - 1) / 2
         array = np.fromfunction(
-            lambda j, i: ((rx - i) ** 2 / rx ** 2 + (ry - j) ** 2 / ry ** 2 <= 1), (h, w)
+            lambda j, i: ((rx - i) ** 2 / rx**2 + (ry - j) ** 2 / ry**2 <= 1), (h, w)
         )
         return Image.fromarray(255 * array.view("uint8"))
 

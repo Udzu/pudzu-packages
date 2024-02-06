@@ -596,7 +596,6 @@ class Date(object):
 
 
 class DateDelta(object):
-
     """Abstract base class for date deltas."""
 
     __metaclass__ = ABC.ABCMeta
@@ -897,11 +896,9 @@ class DatePrecision(Enum):
 
 
 class ApproximateDate(DateRange):
-
     CIRCA_RANGE = 2
 
     def __init__(self, date, precision, circa=False, calendar=gregorian):
-
         if isinstance(date, Integral):
             date = (date,)  # interpret numbers as years, not ordinals
         if non_string_sequence(date, Integral) and len(date) == 1:
@@ -940,20 +937,18 @@ class ApproximateDate(DateRange):
             n = (None, DatePrecision.DECADE, DatePrecision.CENTURY, DatePrecision.MILLENNIUM).index(
                 precision
             )
-            delta = DateInterval(years=circa_range * 10 ** n)
-            first_year = (
-                year - year % 10 ** n if year >= 0 else (year - 1) - (year - 1) % 10 ** n + 1
-            )
+            delta = DateInterval(years=circa_range * 10**n)
+            first_year = year - year % 10**n if year >= 0 else (year - 1) - (year - 1) % 10**n + 1
             if not calendar.validate(YMD(first_year, 1, 1)):
                 first_year += 1  # hack for missing year 0
             last_year = (
-                first_year + 10 ** n - 1 - int(first_year == -(10 ** n) + 1)
+                first_year + 10**n - 1 - int(first_year == -(10**n) + 1)
             )  # count 0 as positive only
             last_month = calendar.months_in_year(last_year)
             last_day = calendar.days_in_month(last_year, last_month)
             start = Date((first_year, 1, 1), calendar=calendar) - delta
             end = Date((last_year, last_month, last_day), calendar=calendar) + delta
-            self.description = "{}{}s".format(abs(year) // 10 ** n, "0" * n)
+            self.description = "{}{}s".format(abs(year) // 10**n, "0" * n)
         super().__init__(start, end, calendar=calendar)
 
     def __repr__(self):

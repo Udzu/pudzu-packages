@@ -481,9 +481,9 @@ attrs = ">=19.0"
 filelock = ">=3.0"
 mypy = [
     {version = ">=0.500", markers = "python_version < \"3.8\""},
+    {version = ">=0.900", markers = "python_version >= \"3.11\""},
     {version = ">=0.700", markers = "python_version >= \"3.8\" and python_version < \"3.9\""},
     {version = ">=0.780", markers = "python_version >= \"3.9\" and python_version < \"3.11\""},
-    {version = ">=0.900", markers = "python_version >= \"3.11\""},
 ]
 pytest = [
     {version = ">=4.6", markers = "python_version >= \"3.6\" and python_version < \"3.10\""},

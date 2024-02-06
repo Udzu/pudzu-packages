@@ -2,7 +2,7 @@
 
 ## Summary 
 Various Pillow utilities. These are monkey-patched on, allowing continued use of the Image.new factory function. Most have only been tested in RGB/RGBA modes and may not work in other modes. For full features and parameters, see docstrings.
- 
+
 ## Dependencies
 *Required*: [pillow](http://pillow.readthedocs.io/en/4.2.x/index.html), [toolz](http://toolz.readthedocs.io/en/latest/index.html), [numpy](http://www.numpy.org/), [pudzu-utils](../pudzu-utils/README.md).
 

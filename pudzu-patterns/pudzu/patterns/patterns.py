@@ -44,26 +44,42 @@ class NFA:
     - *-moves (only used if there is no other matching move)
     """
 
-    def __init__(self, start: State, end: State, transitions: Transitions, captures: Optional[Captures] = None):
+    def __init__(
+        self,
+        start: State,
+        end: State,
+        transitions: Transitions,
+        captures: Optional[Captures] = None,
+    ):
         self.start = start
         self.end = end
         self.transitions = transitions
         self.captures = captures or {}
-        self.states = {self.start, self.end} | {s for s, _ in self.transitions.keys()} | {t for ts in self.transitions.values() for t in ts}
+        self.states = (
+            {self.start, self.end}
+            | {s for s, _ in self.transitions.keys()}
+            | {t for ts in self.transitions.values() for t in ts}
+        )
 
     def __repr__(self) -> str:
         return f"NFA(start={self.start}, end={self.end}, transitions={self.transitions})"
 
     def match(self, string: str) -> Optional[CaptureOutput]:
-        """Match the NFA against a string input. Returns a CaptureOutput if found, or None otherwise."""
+        """Match the NFA against a string input. Returns CaptureOutput if found, None otherwise."""
         old_states: Dict[State, CaptureOutput] = {self.start: {}}
         for c in string:
             new_states: Dict[State, CaptureOutput] = {}
             for s, co in old_states.items():
                 for se in self.expand_epsilons({s}):
-                    for t in self.transitions.get((se, c), self.transitions.get((se, Move.ALL), set())):
+                    for t in self.transitions.get(
+                        (se, c), self.transitions.get((se, Move.ALL), set())
+                    ):
                         if t not in new_states:
-                            cgs = self.captures.get((se, c), set()) if (se, c) in self.transitions else self.captures.get((se, Move.ALL), set())
+                            cgs = (
+                                self.captures.get((se, c), set())
+                                if (se, c) in self.transitions
+                                else self.captures.get((se, Move.ALL), set())
+                            )
                             tco = merge(co, {cg: co.get(cg, "") + c for cg in cgs})
                             new_states[t] = tco
             old_states = new_states
@@ -78,7 +94,9 @@ class NFA:
         new = states
         while new:
             old.update(new)
-            new = {t for s in new for t in self.transitions.get((s, Move.EMPTY), set()) if t not in old}
+            new = {
+                t for s in new for t in self.transitions.get((s, Move.EMPTY), set()) if t not in old
+            }
         return old
 
     def remove_redundant_states(self, aggressive: bool = False) -> None:
@@ -87,19 +105,30 @@ class NFA:
         reachable, new = set(), {self.start}
         while new:
             reachable.update(new)
-            new = {t for (s, i), ts in self.transitions.items() if s in new for t in ts if t not in reachable}
+            new = {
+                t
+                for (s, i), ts in self.transitions.items()
+                if s in new
+                for t in ts
+                if t not in reachable
+            }
         self.states = reachable | {self.start, self.end}
         self.transitions = {(s, i): ts for (s, i), ts in self.transitions.items() if s in reachable}
         # remove states that can't reach the end (and any transitions to those states)
         acceptable, new = set(), {self.end}
         while new:
             acceptable.update(new)
-            new = {s for (s, i), ts in self.transitions.items() if any(t in new for t in ts) and s not in acceptable}
+            new = {
+                s
+                for (s, i), ts in self.transitions.items()
+                if any(t in new for t in ts) and s not in acceptable
+            }
         self.states = acceptable | {self.start, self.end}
         self.transitions = {
             (s, i): {t for t in ts if t in acceptable}
             for (s, i), ts in self.transitions.items()
-            if s in acceptable and (any(t in acceptable for t in ts) or (s, Move.ALL) in self.transitions)
+            if s in acceptable
+            and (any(t in acceptable for t in ts) or (s, Move.ALL) in self.transitions)
         }
         # remove transitions that are equivalent to *
         unnecessary: List[Tuple[State, Input]] = []
@@ -110,11 +139,15 @@ class NFA:
             del self.transitions[k]
 
         # remove capture information for trimmed transitions
-        self.captures = {(s, i): cs for (s, i), cs in self.captures.items() if (s, i) in self.transitions and i != Move.EMPTY}
+        self.captures = {
+            (s, i): cs
+            for (s, i), cs in self.captures.items()
+            if (s, i) in self.transitions and i != Move.EMPTY
+        }
 
         if aggressive:
             # remove states that only go via empty to self.end
-            # (don't call this from MatchBoth as it would break assumptions of some calling functions)
+            # (don't call this from MatchBoth as it would break assumptions of some callers)
             removable = set()
             not_removable = set()
             for (s, i), t in self.transitions.items():
@@ -129,7 +162,9 @@ class NFA:
                     if s in removable:
                         unnecessary.append((s, i))
                     elif any(t in removable for t in ts):
-                        self.transitions[(s, i)] = {t for t in ts if t not in removable} | {self.end}
+                        self.transitions[(s, i)] = {t for t in ts if t not in removable} | {
+                            self.end
+                        }
                 for k in unnecessary:
                     del self.transitions[k]
                 self.states -= removable
@@ -146,7 +181,9 @@ class NFA:
         ends = {self.end}
 
         if compact:
-            if {i for (s, i) in self.transitions if s == self.start} == {Move.EMPTY} and len(self.transitions.get((self.start, Move.EMPTY), set())) == 1:
+            if {i for (s, i) in self.transitions if s == self.start} == {Move.EMPTY} and len(
+                self.transitions.get((self.start, Move.EMPTY), set())
+            ) == 1:
                 states.remove(self.start)
                 start = first(self.transitions[(self.start, Move.EMPTY)])
             if {i for (s, i), ts in self.transitions.items() if self.end in ts} == {Move.EMPTY}:
@@ -179,7 +216,12 @@ class NFA:
                     if move == Move.EMPTY:
                         label = "ε"
                     else:
-                        label = char_class("".join(j for u, j in self.transitions if u == s and isinstance(j, str)), negated=True)
+                        label = char_class(
+                            "".join(
+                                j for u, j in self.transitions if u == s and isinstance(j, str)
+                            ),
+                            negated=True,
+                        )
                     if c:
                         label += f" {{{','.join(c)}}}"
                     g.edge(str(s), str(t), label=label, color=fg, fontcolor=fg)
@@ -206,11 +248,15 @@ class NFA:
             return (
                 "START"
                 if s == self.start
-                else "END"
-                if s == self.end
-                else str(sorted_states.index(s))
-                if renumber_states
-                else str(s).replace("'", "").replace(" ", "")
+                else (
+                    "END"
+                    if s == self.end
+                    else (
+                        str(sorted_states.index(s))
+                        if renumber_states
+                        else str(s).replace("'", "").replace(" ", "")
+                    )
+                )
             )
 
         with open(name + ".fsm", "w", encoding="utf-8") as f:
@@ -229,8 +275,15 @@ class NFA:
                         print(f"{from_label} {input_label} {to_labels}", file=f)
 
     def example(self, min_length: int = 0, max_length: Optional[int] = None) -> Optional[str]:
-        """Generate a random matching string. Assumes NFA has been trimmed of states that can't reach the end."""
-        nfa = MatchBoth(self, MatchLength(min_length, max_length)) if min_length or max_length is not None else self
+        """
+        Generate a random matching string.
+        Assumes NFA has been trimmed of states that can't reach the end.
+        """
+        nfa = (
+            MatchBoth(self, MatchLength(min_length, max_length))
+            if min_length or max_length is not None
+            else self
+        )
         output = ""
         state = nfa.start
         try:
@@ -240,7 +293,10 @@ class NFA:
                 i = random.choice(non_empty)
                 if i == Move.ALL:
                     # TODO: match with supported scripts?
-                    options = list(set(string.ascii_letters + string.digits + " '") - set(i for i in choices if isinstance(i, str)))
+                    options = list(
+                        set(string.ascii_letters + string.digits + " '")
+                        - set(i for i in choices if isinstance(i, str))
+                    )
                     output += random.choice(options)
                 elif isinstance(i, str):
                     output += i
@@ -258,14 +314,30 @@ class NFA:
             least_char = None
             next_state = None
             for state in states:
-                least_trans = minmax([i for (s, i), ts in self.transitions.items() if s == state and ts and isinstance(i, str)], default=None)
-                if least_trans and (not least_char or least_trans == minmax((least_trans, least_char))):
-                    least_char, next_state = least_trans, first(self.transitions[(state, least_trans)])
+                least_trans = minmax(
+                    [
+                        i
+                        for (s, i), ts in self.transitions.items()
+                        if s == state and ts and isinstance(i, str)
+                    ],
+                    default=None,
+                )
+                if least_trans and (
+                    not least_char or least_trans == minmax((least_trans, least_char))
+                ):
+                    least_char, next_state = least_trans, first(
+                        self.transitions[(state, least_trans)]
+                    )
                 if self.transitions.get((state, Move.ALL)):
                     # TODO: match with supported scripts?
-                    least_any = minmax(set(ascii_printables + " ") - {i for (s, i) in self.transitions if s == state})
+                    least_any = minmax(
+                        set(ascii_printables + " ")
+                        - {i for (s, i) in self.transitions if s == state}
+                    )
                     if not least_char or least_any == minmax((least_any, least_char)):
-                        least_char, next_state = least_any, first(self.transitions[(state, Move.ALL)])
+                        least_char, next_state = least_any, first(
+                            self.transitions[(state, Move.ALL)]
+                        )
             if not least_char:
                 break
             bound += least_char
@@ -278,11 +350,17 @@ class NFA:
 
     def regex(self) -> "Regex":
         """Generate a regex corresponding to the NFA."""
-        L = {(i, j): RegexConcat() if i == j else RegexUnion() for i in self.states for j in self.states}
+        L = {
+            (i, j): RegexConcat() if i == j else RegexUnion()
+            for i in self.states
+            for j in self.states
+        }
         for (i, a), js in self.transitions.items():
             for j in js:
                 if a == Move.ALL:
-                    L[i, j] |= RegexNegatedChars("".join(b for k, b in self.transitions if i == k and isinstance(b, str)))
+                    L[i, j] |= RegexNegatedChars(
+                        "".join(b for k, b in self.transitions if i == k and isinstance(b, str))
+                    )
                 elif a == Move.EMPTY:
                     L[i, j] |= RegexConcat()
                 else:
@@ -302,7 +380,7 @@ class NFA:
         return L[self.start, self.end]
 
     def min_length(self) -> Optional[int]:
-        """ The minimum possible length match. """
+        """The minimum possible length match."""
         # use Dijkstra to find shortest path
         unvisited = set(self.states)
         distances = {s: 0 if s == self.start else math.inf for s in self.states}
@@ -318,13 +396,15 @@ class NFA:
             unvisited.remove(current)
             if current == self.end:
                 return int(distances[self.end])
-            current, distance = min(distances.items(), key=lambda x: math.inf if x[0] not in unvisited else x[1])
+            current, distance = min(
+                distances.items(), key=lambda x: math.inf if x[0] not in unvisited else x[1]
+            )
             if distance == math.inf:
                 return None
         return None
 
     def max_length(self) -> Optional[int]:
-        """ The maximum possible length match. """
+        """The maximum possible length match."""
         # converts to a regex, though there's probably a more efficient way
         max_length = self.regex().max_length()
         return int(max_length) if math.isfinite(max_length) else None
@@ -393,7 +473,9 @@ def MatchIn(characters: str) -> NFA:
 
 def MatchNotIn(characters: str) -> NFA:
     """Handles: [^abc], ."""
-    return NFA("1", "2", merge_trans({("1", Move.ALL): {"2"}}, {("1", c): set() for c in characters}))
+    return NFA(
+        "1", "2", merge_trans({("1", Move.ALL): {"2"}}, {("1", c): set() for c in characters})
+    )
 
 
 def MatchWords(words: Iterable[str]) -> NFA:
@@ -439,7 +521,9 @@ def ExplicitFSM(path: Path) -> NFA:
                     x = {"EMPTY": Move.EMPTY, "ALL": Move.ALL}[x]
                     transitions.setdefault((start, x), set()).update(end)
                 elif len(x) > 1:
-                    raise ValueError(f"Unexpected FSM input `{x}`: should be character, class, ALL or EMPTY")
+                    raise ValueError(
+                        f"Unexpected FSM input `{x}`: should be character, class, ALL or EMPTY"
+                    )
                 else:
                     transitions.setdefault((start, x), set()).update(end)
     return NFA("START", "END", transitions)
@@ -457,10 +541,15 @@ def MatchAfter(nfa1: NFA, nfa2: NFA) -> NFA:
     t1 = {(First(s), i): {First(t) for t in ts} for (s, i), ts in nfa1.transitions.items()}
     c1 = {(First(s), i): cs for (s, i), cs in nfa1.captures.items()}
     t2 = {
-        (First(nfa1.end) if s == nfa2.start else Second(s), i): {First(nfa1.end) if t == nfa2.start else Second(t) for t in ts}
+        (First(nfa1.end) if s == nfa2.start else Second(s), i): {
+            First(nfa1.end) if t == nfa2.start else Second(t) for t in ts
+        }
         for (s, i), ts in nfa2.transitions.items()
     }
-    c2 = {(First(nfa1.end) if s == nfa2.start else Second(s), i): cs for (s, i), cs in nfa2.captures.items()}
+    c2 = {
+        (First(nfa1.end) if s == nfa2.start else Second(s), i): cs
+        for (s, i), cs in nfa2.captures.items()
+    }
     return NFA(First(nfa1.start), Second(nfa2.end), merge_trans(t1, t2), merge_trans(c1, c2))
 
 
@@ -469,7 +558,12 @@ def MatchEither(*nfas: NFA) -> NFA:
     Start, End, *Option = new_states("a", "z", *[str(n) for n in range(1, len(nfas) + 1)])
     tis, cis = [], []
     for n, nfa in enumerate(nfas):
-        tis.append({(Option[n](s), i): {Option[n](t) for t in ts} for (s, i), ts in nfa.transitions.items()})
+        tis.append(
+            {
+                (Option[n](s), i): {Option[n](t) for t in ts}
+                for (s, i), ts in nfa.transitions.items()
+            }
+        )
         cis.append({(Option[n](s), i): cs for (s, i), cs in nfa.captures.items()})
     tstart = {(Start(), Move.EMPTY): {Option[n](nfa.start) for n, nfa in enumerate(nfas)}}
     tend = {(Option[n](nfa.end), Move.EMPTY): {End()} for n, nfa in enumerate(nfas)}
@@ -479,7 +573,9 @@ def MatchEither(*nfas: NFA) -> NFA:
 def MatchRepeated(nfa: NFA, repeat: bool = False, optional: bool = False) -> NFA:
     """Handles: A*, A+, A?"""
     Start, End, Star = new_states("a", "z", "*")
-    transitions: Transitions = {(Star(s), i): {Star(t) for t in ts} for (s, i), ts in nfa.transitions.items()}
+    transitions: Transitions = {
+        (Star(s), i): {Star(t) for t in ts} for (s, i), ts in nfa.transitions.items()
+    }
     captures: Captures = {(Star(s), i): cs for (s, i), cs in nfa.captures.items()}
     transitions[(Start(), Move.EMPTY)] = {Star(nfa.start)}
     if optional:
@@ -539,7 +635,11 @@ def MatchDFA(nfa: NFA, negate: bool) -> NFA:
             accepting_states.add(current_state)
         moves = {i for (s, i) in nfa.transitions if s in current_state and i != Move.EMPTY}
         for i in moves:
-            next_state = {t for s in current_state for t in nfa.transitions.get((s, i), nfa.transitions.get((s, Move.ALL), set()))}
+            next_state = {
+                t
+                for s in current_state
+                for t in nfa.transitions.get((s, i), nfa.transitions.get((s, Move.ALL), set()))
+            }
             next_state_sorted = tuple(sorted(nfa.expand_epsilons(next_state), key=str))
             transitions[(current_state, i)] = {next_state_sorted}
             if next_state_sorted not in processed_states:
@@ -562,10 +662,15 @@ def MatchDFA(nfa: NFA, negate: bool) -> NFA:
     return nfa
 
 
-def MatchBoth(nfa1: NFA, nfa2: NFA, start_from: Optional[Set[State]] = None, stop_at: Optional[Set[State]] = None) -> NFA:
+def MatchBoth(
+    nfa1: NFA,
+    nfa2: NFA,
+    start_from: Optional[Set[State]] = None,
+    stop_at: Optional[Set[State]] = None,
+) -> NFA:
     """Handles: A&B"""
     # generate transitions on cartesian product (with special handling for *-transitions)
-    # warning: some of the other methods currently depend on the implementation of this (which is naughty)
+    # warning: some of the other methods currently depend on the implementation of this (!)
     transitions: Transitions = {}
     captures: Captures = {}
     for (s1, i), ts1 in nfa1.transitions.items():
@@ -576,7 +681,9 @@ def MatchBoth(nfa1: NFA, nfa2: NFA, start_from: Optional[Set[State]] = None, sto
                 ts2 = nfa2.transitions.get((s2, i), nfa2.transitions.get((s2, Move.ALL)))
                 if ts2 is not None:
                     transitions = merge_trans(transitions, {((s1, s2), i): set(product(ts1, ts2))})
-                    cs2 = nfa1.captures.get((s1, i), set()) | nfa2.captures.get((s2, i), nfa2.captures.get((s2, Move.ALL), set()))
+                    cs2 = nfa1.captures.get((s1, i), set()) | nfa2.captures.get(
+                        (s2, i), nfa2.captures.get((s2, Move.ALL), set())
+                    )
                     if cs2:
                         captures = merge_trans(captures, {((s1, s2), i): cs2})
     for (s2, i), ts2 in nfa2.transitions.items():
@@ -587,14 +694,21 @@ def MatchBoth(nfa1: NFA, nfa2: NFA, start_from: Optional[Set[State]] = None, sto
                 ts1o = nfa1.transitions.get((s1, Move.ALL))
                 if ts1o is not None:
                     transitions = merge_trans(transitions, {((s1, s2), i): set(product(ts1o, ts2))})
-                    cs1o = nfa2.captures.get((s2, i), set()) | nfa1.captures.get((s1, Move.ALL), set())
+                    cs1o = nfa2.captures.get((s2, i), set()) | nfa1.captures.get(
+                        (s1, Move.ALL), set()
+                    )
                     if cs1o:
                         captures = merge_trans(captures, {((s1, s2), i): cs1o})
     if start_from:
         transitions[("1", Move.EMPTY)] = start_from
     if stop_at:
         transitions = merge_trans(transitions, {(s, Move.EMPTY): {"2"} for s in stop_at})
-    nfa = NFA("1" if start_from else (nfa1.start, nfa2.start), "2" if stop_at else (nfa1.end, nfa2.end), transitions, captures)
+    nfa = NFA(
+        "1" if start_from else (nfa1.start, nfa2.start),
+        "2" if stop_at else (nfa1.end, nfa2.end),
+        transitions,
+        captures,
+    )
     nfa.remove_redundant_states()
     return nfa
 
@@ -606,24 +720,52 @@ def MatchContains(nfa1: NFA, nfa2: NFA, proper: bool) -> NFA:
     LeftFirst, Left, Middle, RightFirst, Right = new_states("<l1", "<l2", "<m", "<r1", "<r2")
     t1, t1e, c1, t4, t4e, c4 = {}, {}, {}, {}, {}, {}
     if proper:
-        t1 = {(LeftFirst(s), i): {LeftFirst(t) for t in ts} for (s, i), ts in nfa1.transitions.items() if i == Move.EMPTY}
-        t1e = {(LeftFirst(s), i): {Left(t) for t in ts} for (s, i), ts in nfa1.transitions.items() if i != Move.EMPTY}
+        t1 = {
+            (LeftFirst(s), i): {LeftFirst(t) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i == Move.EMPTY
+        }
+        t1e = {
+            (LeftFirst(s), i): {Left(t) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i != Move.EMPTY
+        }
         c1 = {(LeftFirst(s), i): cs for (s, i), cs in nfa1.captures.items()}
     t2 = {(Left(s), i): {Left(t) for t in ts} for (s, i), ts in nfa1.transitions.items()}
     c2 = {(Left(s), i): cs for (s, i), cs in nfa1.captures.items()}
     t2e = {(Left(s), Move.EMPTY): {Middle(s, nfa2.start)} for s in nfa1.states}
-    t3 = {(Middle(s, q), i): {Middle(s, t) for t in ts} for (q, i), ts in nfa2.transitions.items() for s in nfa1.states}
+    t3 = {
+        (Middle(s, q), i): {Middle(s, t) for t in ts}
+        for (q, i), ts in nfa2.transitions.items()
+        for s in nfa1.states
+    }
     c3 = {(Middle(s, q), i): cs for (q, i), cs in nfa2.captures.items() for s in nfa1.states}
-    t3e = {(Middle(s, nfa2.end), Move.EMPTY): {(RightFirst(s) if proper else Right(s))} for s in nfa1.states}
+    t3e = {
+        (Middle(s, nfa2.end), Move.EMPTY): {(RightFirst(s) if proper else Right(s))}
+        for s in nfa1.states
+    }
     if proper:
-        t4 = {(RightFirst(s), i): {RightFirst(t) for t in ts} for (s, i), ts in nfa1.transitions.items() if i == Move.EMPTY}
-        t4e = {(RightFirst(s), i): {Right(t) for t in ts} for (s, i), ts in nfa1.transitions.items() if i != Move.EMPTY}
+        t4 = {
+            (RightFirst(s), i): {RightFirst(t) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i == Move.EMPTY
+        }
+        t4e = {
+            (RightFirst(s), i): {Right(t) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i != Move.EMPTY
+        }
         c4 = {(RightFirst(s), i): cs for (s, i), cs in nfa1.captures.items()}
     t5 = {(Right(s), i): {Right(t) for t in ts} for (s, i), ts in nfa1.transitions.items()}
     c5 = {(Right(s), i): cs for (s, i), cs in nfa1.captures.items()}
     transitions = merge_trans(t1, t1e, t2, t2e, t3, t3e, t4, t4e, t5)
     captures = merge_trans(c1, c2, c3, c4, c5)
-    nfa = NFA(LeftFirst(nfa1.start) if proper else Left(nfa1.start), Right(nfa1.end), transitions, captures)
+    nfa = NFA(
+        LeftFirst(nfa1.start) if proper else Left(nfa1.start),
+        Right(nfa1.end),
+        transitions,
+        captures,
+    )
     nfa.remove_redundant_states()
     return nfa
 
@@ -635,22 +777,51 @@ def MatchInterleaved(nfa1: NFA, nfa2: NFA, proper: bool) -> NFA:
     First, Left, Right, Last = new_states("^a", "^l", "^r", "^z")
     t1, t1e, c1, t4, t4e, c4 = {}, {}, {}, {}, {}, {}
     if proper:
-        t1 = {(First(s), i): {First(t) for t in ts} for (s, i), ts in nfa1.transitions.items() if i == Move.EMPTY}
-        t1e = {(First(s), i): {Left(t, nfa2.start) for t in ts} for (s, i), ts in nfa1.transitions.items() if i != Move.EMPTY}
+        t1 = {
+            (First(s), i): {First(t) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i == Move.EMPTY
+        }
+        t1e = {
+            (First(s), i): {Left(t, nfa2.start) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i != Move.EMPTY
+        }
         c1 = {(First(s), i): cs for (s, i), cs in nfa1.captures.items()}
-    t2 = {(Left(s, q), i): {Left(t, q) for t in ts} for (s, i), ts in nfa1.transitions.items() for q in nfa2.states}
+    t2 = {
+        (Left(s, q), i): {Left(t, q) for t in ts}
+        for (s, i), ts in nfa1.transitions.items()
+        for q in nfa2.states
+    }
     c2 = {(Left(s, q), i): cs for (s, i), cs in nfa1.captures.items() for q in nfa2.states}
     t2e = {(Left(q, s), Move.EMPTY): {Right(q, s)} for q in nfa1.states for s in nfa2.states}
-    t3 = {(Right(q, s), i): {Right(q, t) for t in ts} for (s, i), ts in nfa2.transitions.items() for q in nfa1.states}
+    t3 = {
+        (Right(q, s), i): {Right(q, t) for t in ts}
+        for (s, i), ts in nfa2.transitions.items()
+        for q in nfa1.states
+    }
     c3 = {(Right(q, s), i): cs for (s, i), cs in nfa2.captures.items() for q in nfa1.states}
     t3e = {(Right(q, s), Move.EMPTY): {Left(q, s)} for q in nfa1.states for s in nfa2.states}
     if proper:
-        t4 = {(Left(s, nfa2.end), i): {Last(t) for t in ts} for (s, i), ts in nfa1.transitions.items() if i != Move.EMPTY}
+        t4 = {
+            (Left(s, nfa2.end), i): {Last(t) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i != Move.EMPTY
+        }
         c4 = {(Left(s, nfa2.end), i): cs for (s, i), cs in nfa1.captures.items()}
-        t4e = {(Last(s), i): {Last(t) for t in ts} for (s, i), ts in nfa1.transitions.items() if i == Move.EMPTY}
+        t4e = {
+            (Last(s), i): {Last(t) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i == Move.EMPTY
+        }
     transitions = merge_trans(t1, t1e, t2, t2e, t3, t3e, t4, t4e)
     captures = merge_trans(c1, c2, c3, c4)
-    nfa = NFA(First(nfa1.start) if proper else Left(nfa1.start, nfa2.start), Last(nfa1.end) if proper else Right(nfa1.end, nfa2.end), transitions, captures)
+    nfa = NFA(
+        First(nfa1.start) if proper else Left(nfa1.start, nfa2.start),
+        Last(nfa1.end) if proper else Right(nfa1.end, nfa2.end),
+        transitions,
+        captures,
+    )
     nfa.remove_redundant_states()
     return nfa
 
@@ -660,18 +831,43 @@ def MatchAlternating(nfa1: NFA, nfa2: NFA, ordered: bool) -> NFA:
     # transition between (1) AxB and (2) AxB states
     # for order agnostic alternation, also use an additional (0) start state
     Start, Left, Right = new_states("#a", "#l", "#r")
-    t0 = {(Start(), Move.EMPTY): {Left(nfa1.start, nfa2.start), Right(nfa1.start, nfa2.start)}} if not ordered else {}
-    t1 = {(Left(s, q), i): {(Left if i == Move.EMPTY else Right)(t, q) for t in ts} for (s, i), ts in nfa1.transitions.items() for q in nfa2.states}
+    t0 = (
+        {(Start(), Move.EMPTY): {Left(nfa1.start, nfa2.start), Right(nfa1.start, nfa2.start)}}
+        if not ordered
+        else {}
+    )
+    t1 = {
+        (Left(s, q), i): {(Left if i == Move.EMPTY else Right)(t, q) for t in ts}
+        for (s, i), ts in nfa1.transitions.items()
+        for q in nfa2.states
+    }
     c1 = {(Left(s, q), i): cs for (s, i), cs in nfa1.captures.items() for q in nfa2.states}
-    t2 = {(Right(q, s), i): {(Right if i == Move.EMPTY else Left)(q, t) for t in ts} for (s, i), ts in nfa2.transitions.items() for q in nfa1.states}
+    t2 = {
+        (Right(q, s), i): {(Right if i == Move.EMPTY else Left)(q, t) for t in ts}
+        for (s, i), ts in nfa2.transitions.items()
+        for q in nfa1.states
+    }
     c2 = {(Right(q, s), i): cs for (s, i), cs in nfa2.captures.items() for q in nfa1.states}
     # handle final transitions
-    t1e = {(Left(nfa1.end, s), Move.EMPTY): {Left(nfa1.end, t) for t in ts} for (s, i), ts in nfa2.transitions.items() if i == Move.EMPTY}
-    t2e = {(Right(s, nfa2.end), Move.EMPTY): {Right(t, nfa2.end) for t in ts} for (s, i), ts in nfa1.transitions.items() if i == Move.EMPTY}
+    t1e = {
+        (Left(nfa1.end, s), Move.EMPTY): {Left(nfa1.end, t) for t in ts}
+        for (s, i), ts in nfa2.transitions.items()
+        if i == Move.EMPTY
+    }
+    t2e = {
+        (Right(s, nfa2.end), Move.EMPTY): {Right(t, nfa2.end) for t in ts}
+        for (s, i), ts in nfa1.transitions.items()
+        if i == Move.EMPTY
+    }
     t21 = {(Right(nfa1.end, nfa2.end), Move.EMPTY): {Left(nfa1.end, nfa2.end)}}
     transitions = merge_trans(t0, t1, t1e, t2, t2e, t21)
     captures = merge_trans(c1, c2)
-    nfa = NFA(Start() if not ordered else Left(nfa1.start, nfa2.start), Left(nfa1.end, nfa2.end), transitions, captures)
+    nfa = NFA(
+        Start() if not ordered else Left(nfa1.start, nfa2.start),
+        Left(nfa1.end, nfa2.end),
+        transitions,
+        captures,
+    )
     nfa.remove_redundant_states()
     return nfa
 
@@ -686,14 +882,20 @@ def MatchSubtract(nfa1: NFA, nfa2: NFA, from_right: bool, negate: bool) -> NFA:
         both = MatchBoth(nfa1, nfa2, stop_at={(a, nfa2.end) for a in nfa1.states})
     if negate:
         return both
-    transitions: Transitions = {(Middle(s), i): {Middle(t) for t in ts} for (s, i), ts in nfa1.transitions.items()}
+    transitions: Transitions = {
+        (Middle(s), i): {Middle(t) for t in ts} for (s, i), ts in nfa1.transitions.items()
+    }
     captures: Captures = {(Middle(s), i): cs for (s, i), cs in nfa1.captures.items()}
     if from_right:
         midpoints = {a for a, _ in both.transitions.get((both.start, Move.EMPTY), set())}
-        transitions = merge_trans(transitions, {(Middle(s), Move.EMPTY): {End()} for s in midpoints})
+        transitions = merge_trans(
+            transitions, {(Middle(s), Move.EMPTY): {End()} for s in midpoints}
+        )
         nfa = NFA(Middle(nfa1.start), End(), transitions, captures)
     else:
-        midpoints = {a for ((a, b), i), cs in both.transitions.items() if i == Move.EMPTY and both.end in cs}
+        midpoints = {
+            a for ((a, b), i), cs in both.transitions.items() if i == Move.EMPTY and both.end in cs
+        }
         transitions[(Start(), Move.EMPTY)] = {Middle(s) for s in midpoints}
         nfa = NFA(Start(), Middle(nfa1.end), transitions, captures)
     nfa.remove_redundant_states()
@@ -706,32 +908,76 @@ def MatchSubtractInside(nfa1: NFA, nfa2: NFA, proper: bool, replace: Optional[NF
     LeftFirst, Left, Replace, RightFirst, Right = new_states("->l1", "->l2", "->m", "->r1", "->r2")
     t1, t1e, c1, t3, c3, t3e, t4, t4e, c4 = {}, {}, {}, {}, {}, {}, {}, {}, {}
     if proper:
-        t1 = {(LeftFirst(s), i): {LeftFirst(t) for t in ts} for (s, i), ts in nfa1.transitions.items() if i == Move.EMPTY}
-        t1e = {(LeftFirst(s), i): {Left(t) for t in ts} for (s, i), ts in nfa1.transitions.items() if i != Move.EMPTY}
+        t1 = {
+            (LeftFirst(s), i): {LeftFirst(t) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i == Move.EMPTY
+        }
+        t1e = {
+            (LeftFirst(s), i): {Left(t) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i != Move.EMPTY
+        }
         c1 = {(LeftFirst(s), i): cs for (s, i), cs in nfa1.captures.items()}
     t2 = {(Left(s), i): {Left(t) for t in ts} for (s, i), ts in nfa1.transitions.items()}
     c2 = {(Left(s), i): cs for (s, i), cs in nfa1.captures.items()}
     t2es = []
     if replace:
-        t3 = {(Replace(s, q), i): {Replace(s, t) for t in ts} for (q, i), ts in replace.transitions.items() for s in nfa1.states}
-        c3 = {(Replace(s, q), i): cs for (q, i), cs in replace.captures.items() for s in nfa1.states}
-        t3e = {(Replace(s, replace.end), Move.EMPTY): {(RightFirst(s) if proper else Right(s))} for s in nfa1.states}
+        t3 = {
+            (Replace(s, q), i): {Replace(s, t) for t in ts}
+            for (q, i), ts in replace.transitions.items()
+            for s in nfa1.states
+        }
+        c3 = {
+            (Replace(s, q), i): cs for (q, i), cs in replace.captures.items() for s in nfa1.states
+        }
+        t3e = {
+            (Replace(s, replace.end), Move.EMPTY): {(RightFirst(s) if proper else Right(s))}
+            for s in nfa1.states
+        }
     for s in nfa1.states:
-        both = MatchBoth(nfa1, nfa2, start_from={(s, nfa2.start)}, stop_at={(a, nfa2.end) for a in nfa1.states})
+        both = MatchBoth(
+            nfa1, nfa2, start_from={(s, nfa2.start)}, stop_at={(a, nfa2.end) for a in nfa1.states}
+        )
         new_end = {a for a, _ in both.transitions.get((both.start, Move.EMPTY), set())}
-        new_start = {a[0] for (a, i), cs in both.transitions.items() if i == Move.EMPTY and both.end in cs}
+        new_start = {
+            a[0] for (a, i), cs in both.transitions.items() if i == Move.EMPTY and both.end in cs
+        }
         t2es.append(
-            {(Left(e), Move.EMPTY): {(Replace(s, replace.start) if replace else RightFirst(s) if proper else Right(s)) for s in new_start} for e in new_end}
+            {
+                (Left(e), Move.EMPTY): {
+                    (
+                        Replace(s, replace.start)
+                        if replace
+                        else RightFirst(s) if proper else Right(s)
+                    )
+                    for s in new_start
+                }
+                for e in new_end
+            }
         )
     if proper:
-        t4 = {(RightFirst(s), i): {RightFirst(t) for t in ts} for (s, i), ts in nfa1.transitions.items() if i == Move.EMPTY}
-        t4e = {(RightFirst(s), i): {Right(t) for t in ts} for (s, i), ts in nfa1.transitions.items() if i != Move.EMPTY}
+        t4 = {
+            (RightFirst(s), i): {RightFirst(t) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i == Move.EMPTY
+        }
+        t4e = {
+            (RightFirst(s), i): {Right(t) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i != Move.EMPTY
+        }
         c4 = {(RightFirst(s), i): cs for (s, i), cs in nfa1.captures.items()}
     t5 = {(Right(s), i): {Right(t) for t in ts} for (s, i), ts in nfa1.transitions.items()}
     c5 = {(Right(s), i): cs for (s, i), cs in nfa1.captures.items()}
     transitions = merge_trans(t1, t1e, t2, *t2es, t3, t3e, t4, t4e, t5)
     captures = merge_trans(c1, c2, c3, c4, c5)
-    nfa = NFA(LeftFirst(nfa1.start) if proper else Left(nfa1.start), Right(nfa1.end), transitions, captures)
+    nfa = NFA(
+        LeftFirst(nfa1.start) if proper else Left(nfa1.start),
+        Right(nfa1.end),
+        transitions,
+        captures,
+    )
     nfa.remove_redundant_states()
     return nfa
 
@@ -741,23 +987,35 @@ def MatchSubtractOutside(nfa1: NFA, nfa2: NFA, proper: bool) -> NFA:
     # Use partial intersections to generate collections of alternatives.
     both_start = MatchBoth(nfa1, nfa2, stop_at={(a, b) for a in nfa1.states for b in nfa2.states})
     both_end = MatchBoth(nfa1, nfa2, start_from={(a, b) for a in nfa1.states for b in nfa2.states})
-    both_start_end = {s for (s, i), cs in both_start.transitions.items() if i == Move.EMPTY and both_start.end in cs}
+    both_start_end = {
+        s
+        for (s, i), cs in both_start.transitions.items()
+        if i == Move.EMPTY and both_start.end in cs
+    }
     both_end_start = both_end.transitions.get((both_end.start, Move.EMPTY), set())
 
     if proper:
         # ensure partial intersections are (potentially) non-empty
         both_start_proper = MatchBoth(both_start, MatchLength(1))
         both_start_end = {
-            s[0] for (s, i), cs in both_start_proper.transitions.items() if i == Move.EMPTY and both_start_proper.end in cs and s[0] != both_start.end
+            s[0]
+            for (s, i), cs in both_start_proper.transitions.items()
+            if i == Move.EMPTY and both_start_proper.end in cs and s[0] != both_start.end
         }
         both_end_proper = MatchBoth(both_end, MatchLength(1))
-        both_end_start = {s[0] for s in both_end_proper.transitions.get((both_end_proper.start, Move.EMPTY), set()) if s[0] != both_end.start}
+        both_end_start = {
+            s[0]
+            for s in both_end_proper.transitions.get((both_end_proper.start, Move.EMPTY), set())
+            if s[0] != both_end.start
+        }
 
     nfas: List[NFA] = []
     midpoints = {b for a, b in both_start_end if any(b == b2 for a2, b2 in both_end_start)}
     for m in midpoints:
         Start, Middle, End = new_states("-<a", "-<m", "-<z")
-        transitions: Transitions = {(Middle(s), i): {Middle(t) for t in ts} for (s, i), ts in nfa1.transitions.items()}
+        transitions: Transitions = {
+            (Middle(s), i): {Middle(t) for t in ts} for (s, i), ts in nfa1.transitions.items()
+        }
         captures: Captures = {(Middle(s), i): cs for (s, i), cs in nfa1.captures.items()}
         transitions[Start(), Move.EMPTY] = {Middle(a) for a, b in both_start_end if b == m}
         for a in {a for a, b in both_end_start if b == m}:
@@ -771,7 +1029,12 @@ def MatchSubtractOutside(nfa1: NFA, nfa2: NFA, proper: bool) -> NFA:
 def MatchSubtractAlternating(nfa1: NFA, nfa2: NFA, ordered: bool, from_right: bool = True) -> NFA:
     """Handles: A-#B, A_-#B, A-##B"""
     # Expand transitions in A with one from A&B (tracking both A and B states)
-    both = MatchBoth(nfa1, nfa2, stop_at={(a, b) for a in nfa1.states for b in nfa2.states}, start_from={(a, b) for a in nfa1.states for b in nfa2.states})
+    both = MatchBoth(
+        nfa1,
+        nfa2,
+        stop_at={(a, b) for a in nfa1.states for b in nfa2.states},
+        start_from={(a, b) for a in nfa1.states for b in nfa2.states},
+    )
     transitions: Transitions = {}
     captures: Captures = {}
     for (s, i), ts in nfa1.transitions.items():
@@ -780,7 +1043,13 @@ def MatchSubtractAlternating(nfa1: NFA, nfa2: NFA, ordered: bool, from_right: bo
                 states = {(t, b) for t in ts}
             else:
                 ts = nfa1.expand_epsilons(ts)
-                states = {u for (r, i), us in both.transitions.items() for t in ts if r == (t, b) and i != Move.EMPTY for u in us}
+                states = {
+                    u
+                    for (r, i), us in both.transitions.items()
+                    for t in ts
+                    if r == (t, b) and i != Move.EMPTY
+                    for u in us
+                }
             transitions[((s, b), i)] = states
             if (s, i) in nfa1.captures:
                 captures[((s, b), i)] = nfa1.captures[(s, i)]
@@ -794,7 +1063,9 @@ def MatchSubtractAlternating(nfa1: NFA, nfa2: NFA, ordered: bool, from_right: bo
     if not ordered or not from_right:
         ts = {(nfa1.start, nfa2.start)}
         ts = both.expand_epsilons(ts)
-        start_state |= {u for (s, i), us in both.transitions.items() if s in ts and i != Move.EMPTY for u in us}
+        start_state |= {
+            u for (s, i), us in both.transitions.items() if s in ts and i != Move.EMPTY for u in us
+        }
     if not ordered or from_right:
         start_state |= {(nfa1.start, nfa2.start)}
     if len(start_state) == 1:
@@ -809,7 +1080,12 @@ def MatchSubtractAlternating(nfa1: NFA, nfa2: NFA, ordered: bool, from_right: bo
 def MatchSubtractInterleaved(nfa1: NFA, nfa2: NFA, proper: bool, from_right: bool = True) -> NFA:
     """Handles: A-^B, A-^^B, A_-^^B"""
     # Combine transitions from A with empty transitions from A&B (tracking both A and B states)
-    both = MatchBoth(nfa1, nfa2, stop_at={(a, b) for a in nfa1.states for b in nfa2.states}, start_from={(a, b) for a in nfa1.states for b in nfa2.states})
+    both = MatchBoth(
+        nfa1,
+        nfa2,
+        stop_at={(a, b) for a in nfa1.states for b in nfa2.states},
+        start_from={(a, b) for a in nfa1.states for b in nfa2.states},
+    )
     transitions: Transitions = {}
     captures: Captures = {}
     for (a, i), ts in nfa1.transitions.items():
@@ -826,12 +1102,24 @@ def MatchSubtractInterleaved(nfa1: NFA, nfa2: NFA, proper: bool, from_right: boo
         nfa = NFA((nfa1.start, nfa2.start), "z", transitions, captures)
     elif from_right:
         First, Middle, Last = new_states("-^a", "-^m", "-^z")
-        t1 = {(First(s), i): {First(t) for t in ts} for (s, i), ts in nfa1.transitions.items() if i == Move.EMPTY}
-        t1e = {(First(s), i): {Middle((t, nfa2.start)) for t in ts} for (s, i), ts in nfa1.transitions.items() if i != Move.EMPTY}
+        t1 = {
+            (First(s), i): {First(t) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i == Move.EMPTY
+        }
+        t1e = {
+            (First(s), i): {Middle((t, nfa2.start)) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i != Move.EMPTY
+        }
         c1 = {(First(s), i): cs for (s, i), cs in nfa1.captures.items()}
         t2 = {(Middle(s), i): {Middle(t) for t in ts} for (s, i), ts in transitions.items()}
         c2 = {(Middle(s), i): cs for (s, i), cs in captures.items()}
-        t2e = {(Middle((s, nfa2.end)), i): {Last(t) for t in ts} for (s, i), ts in nfa1.transitions.items() if i != Move.EMPTY}
+        t2e = {
+            (Middle((s, nfa2.end)), i): {Last(t) for t in ts}
+            for (s, i), ts in nfa1.transitions.items()
+            if i != Move.EMPTY
+        }
         t3 = {(Last(s), i): {Last(t) for t in ts} for (s, i), ts in nfa1.transitions.items()}
         c3 = {(Last(s), i): cs for (s, i), cs in nfa1.captures.items()}
         transitions = merge_trans(t1, t1e, t2, t2e, t3)
@@ -839,12 +1127,18 @@ def MatchSubtractInterleaved(nfa1: NFA, nfa2: NFA, proper: bool, from_right: boo
         nfa = NFA(First(nfa1.start), Last(nfa1.end), transitions, captures)
     else:
         ts = both.expand_epsilons({(nfa1.start, nfa2.start)})
-        start_states = {u for (s, i), us in both.transitions.items() if s in ts and i != Move.EMPTY for u in us}
+        start_states = {
+            u for (s, i), us in both.transitions.items() if s in ts and i != Move.EMPTY for u in us
+        }
         ts = set()
         for t in both.states:
             if (nfa1.end, nfa2.end) in both.expand_epsilons({t}):
                 ts.add(t)
-        end_states = {s for (s, i), us in both.transitions.items() if any(u in ts for u in us) and i != Move.EMPTY}
+        end_states = {
+            s
+            for (s, i), us in both.transitions.items()
+            if any(u in ts for u in us) and i != Move.EMPTY
+        }
 
         transitions[("a", Move.EMPTY)] = start_states
         for s in end_states:
@@ -920,7 +1214,11 @@ def MatchRotated(nfa: NFA, shift: int) -> NFA:
     if shift < 0:
         window = MatchLength(-shift, -shift)
         intersection = MatchBoth(nfa, window, stop_at={(a, window.end) for a in nfa.states})
-        intersection_ends = {s[0] for (s, i), cs in intersection.transitions.items() if i == Move.EMPTY and intersection.end in cs and s[0] != nfa.end}
+        intersection_ends = {
+            s[0]
+            for (s, i), cs in intersection.transitions.items()
+            if i == Move.EMPTY and intersection.end in cs and s[0] != nfa.end
+        }
         for middle in intersection_ends:
             move = MatchBoth(nfa, window, stop_at={(middle, window.end)})
             keep = NFA(middle, nfa.end, nfa.transitions, nfa.captures)
@@ -930,7 +1228,11 @@ def MatchRotated(nfa: NFA, shift: int) -> NFA:
     else:
         window = MatchLength(shift, shift)
         intersection = MatchBoth(nfa, window, start_from={(a, window.start) for a in nfa.states})
-        intersection_starts = {s[0] for s in intersection.transitions.get((intersection.start, Move.EMPTY), set()) if s[0] != nfa.start}
+        intersection_starts = {
+            s[0]
+            for s in intersection.transitions.get((intersection.start, Move.EMPTY), set())
+            if s[0] != nfa.start
+        }
         for middle in intersection_starts:
             move = MatchBoth(nfa, window, start_from={(middle, window.start)})
             keep = NFA(nfa.start, middle, nfa.transitions, nfa.captures)
@@ -947,7 +1249,12 @@ def MatchSlice(nfa: NFA, start: Optional[int], end: Optional[int], step: int) ->
     """Handles: (?S:A)[3:5], (?S:A)[-1::-2]"""
     # reverse slice is equivalent to slice of reverse
     if step < 0:
-        return MatchSlice(MatchReversed(nfa), None if end is None else end + 1, None if start is None else start + 1, -step)
+        return MatchSlice(
+            MatchReversed(nfa),
+            None if end is None else end + 1,
+            None if start is None else start + 1,
+            -step,
+        )
 
     assert step != 0
     # slice off start
@@ -960,7 +1267,9 @@ def MatchSlice(nfa: NFA, start: Optional[int], end: Optional[int], step: int) ->
     if end is not None:
         if end >= 0:
             assert end >= start >= 0
-            nfa = MatchSubtract(nfa, MatchLength(end - start, end - start), from_right=False, negate=True)
+            nfa = MatchSubtract(
+                nfa, MatchLength(end - start, end - start), from_right=False, negate=True
+            )
         else:
             assert start >= 0 or end >= start
             nfa = MatchSubtract(nfa, MatchLength(-end, -end), from_right=True, negate=False)
@@ -972,7 +1281,13 @@ def MatchSlice(nfa: NFA, start: Optional[int], end: Optional[int], step: int) ->
             for _ in range(n):
                 states = nfa.expand_epsilons(states)
                 hit_end |= nfa.end in states
-                states = {t for s in states for (r, i), ts in nfa.transitions.items() if r == s and i != Move.EMPTY for t in ts}
+                states = {
+                    t
+                    for s in states
+                    for (r, i), ts in nfa.transitions.items()
+                    if r == s and i != Move.EMPTY
+                    for t in ts
+                }
             return states, hit_end
 
         transitions: Transitions = {}
@@ -1019,24 +1334,41 @@ class Pattern:
     # parsing (should really go via an AST here)
     from pyparsing import Forward, Group, Literal, OneOrMore
     from pyparsing import Optional as Option
-    from pyparsing import ParserElement, Word, alphanums, alphas, infixNotation, nums, oneOf, opAssoc
+    from pyparsing import (
+        ParserElement,
+        Word,
+        alphanums,
+        alphas,
+        infixNotation,
+        nums,
+        oneOf,
+        opAssoc,
+    )
 
     ParserElement.setDefaultWhitespaceChars("")
     ParserElement.enablePackrat()
 
     # TODO: character escaping, supported scripts
     _0_to_99 = Word(nums, min=1, max=2).setParseAction(lambda t: int("".join(t[0])))
-    _m99_to_99 = (Option("-") + _0_to_99).setParseAction(lambda t: t[-1] * (-1 if len(t) == 2 else 1))
+    _m99_to_99 = (Option("-") + _0_to_99).setParseAction(
+        lambda t: t[-1] * (-1 if len(t) == 2 else 1)
+    )
     _id = Word(alphas + "_", alphanums + "_")
 
     printables = ppu.Latin1.printables + " " + EXTRA_PRINTABLES
     literal_exclude = r"()+*.?<>#{}^_&|$\[]-"
     set_exclude = r"\]"
 
-    literal = Word(printables, excludeChars=literal_exclude, exact=1).setParseAction(lambda t: MatchIn(t[0]))
+    literal = Word(printables, excludeChars=literal_exclude, exact=1).setParseAction(
+        lambda t: MatchIn(t[0])
+    )
     dot = Literal(".").setParseAction(lambda t: MatchNotIn(""))
-    nset = ("[^" + Word(printables, excludeChars=set_exclude, min=1) + "]").setParseAction(lambda t: MatchNotIn(srange(f"[{t[1]}]")))
-    set = ("[" + Word(printables, excludeChars=set_exclude, min=1) + "]").setParseAction(lambda t: MatchIn(srange(f"[{t[1]}]")))
+    nset = ("[^" + Word(printables, excludeChars=set_exclude, min=1) + "]").setParseAction(
+        lambda t: MatchNotIn(srange(f"[{t[1]}]"))
+    )
+    set = ("[" + Word(printables, excludeChars=set_exclude, min=1) + "]").setParseAction(
+        lambda t: MatchIn(srange(f"[{t[1]}]"))
+    )
     words = Literal(r"\w").setParseAction(lambda t: DICTIONARY_FSM)
     fsm = Literal(r"\f").setParseAction(lambda t: EXPLICIT_FSM)
 
@@ -1044,21 +1376,40 @@ class Pattern:
     group = (
         ("(" + expr + ")").setParseAction(lambda t: t[1])
         | ("(?D:" + expr + ")").setParseAction(lambda t: MatchDFA(t[1], negate=False))
-        | ("(?M:" + expr + ")").setParseAction(lambda t: MatchDFA(MatchReversed(MatchDFA(MatchReversed(t[1]), negate=False)), negate=False))
+        | ("(?M:" + expr + ")").setParseAction(
+            lambda t: MatchDFA(
+                MatchReversed(MatchDFA(MatchReversed(t[1]), negate=False)), negate=False
+            )
+        )
         | ("(?i:" + expr + ")").setParseAction(lambda t: MatchInsensitively(t[1]))
         | ("(?r:" + expr + ")").setParseAction(lambda t: MatchReversed(t[1]))
         | ("(?<" + _id + ">" + expr + ")").setParseAction(lambda t: MatchCapture(t[3], t[1]))
         | ("(?s" + _m99_to_99 + ":" + expr + ")").setParseAction(lambda t: MatchShifted(t[3], t[1]))
-        | ("(?s:" + expr + ")").setParseAction(lambda t: MatchEither(*[MatchShifted(t[1], i) for i in range(1, 26)]))
-        | ("(?R" + _m99_to_99 + ":" + expr + ")").setParseAction(lambda t: MatchRotated(t[3], t[1]))
-        | ("(?R<=" + _0_to_99 + ":" + expr + ")").setParseAction(lambda t: MatchEither(*[MatchRotated(t[3], i) for i in range(-t[1], t[1] + 1) if i != 0]))
-        | ("(?S:" + expr + ")[" + Option(_m99_to_99, None) + ":" + Option(_m99_to_99, None) + Option(":" + Option(_m99_to_99, 1), 1) + "]").setParseAction(
-            lambda t: MatchSlice(t[1], t[3], t[5], t[-2])
+        | ("(?s:" + expr + ")").setParseAction(
+            lambda t: MatchEither(*[MatchShifted(t[1], i) for i in range(1, 26)])
         )
+        | ("(?R" + _m99_to_99 + ":" + expr + ")").setParseAction(lambda t: MatchRotated(t[3], t[1]))
+        | ("(?R<=" + _0_to_99 + ":" + expr + ")").setParseAction(
+            lambda t: MatchEither(
+                *[MatchRotated(t[3], i) for i in range(-t[1], t[1] + 1) if i != 0]
+            )
+        )
+        | (
+            "(?S:"
+            + expr
+            + ")["
+            + Option(_m99_to_99, None)
+            + ":"
+            + Option(_m99_to_99, None)
+            + Option(":" + Option(_m99_to_99, 1), 1)
+            + "]"
+        ).setParseAction(lambda t: MatchSlice(t[1], t[3], t[5], t[-2]))
         | ("(?/" + expr + "/" + expr + "/" + expr + "/" + Option("s") + ")").setParseAction(
             lambda t: MatchSubtractInside(t[1], t[3], proper=(t[7] == "s"), replace=t[5])
         )
-        | ("(?&" + _id + "=" + expr + ")").setParseAction(lambda t: SUBPATTERNS.update({t[1]: t[3]}) or MatchEmpty())
+        | ("(?&" + _id + "=" + expr + ")").setParseAction(
+            lambda t: SUBPATTERNS.update({t[1]: t[3]}) or MatchEmpty()
+        )
         | ("(?&" + _id + ")").setParseAction(lambda t: SUBPATTERNS[t[1]])
     )
     atom = literal | dot | nset | set | words | fsm | group
@@ -1073,7 +1424,9 @@ class Pattern:
         | (atom + "?").setParseAction(lambda t: MatchRepeated(t[0], optional=True))
         | (atom + "{" + _0_to_99 + "}").setParseAction(lambda t: MatchRepeatedN(t[0], t[2], t[2]))
         | (atom + "{" + _0_to_99 + ",}").setParseAction(lambda t: MatchRepeatedNplus(t[0], t[2]))
-        | (atom + "{" + _0_to_99 + "," + _0_to_99 + "}").setParseAction(lambda t: MatchRepeatedN(t[0], t[2], t[4]))
+        | (atom + "{" + _0_to_99 + "," + _0_to_99 + "}").setParseAction(
+            lambda t: MatchRepeatedN(t[0], t[2], t[4])
+        )
         | ("¬" + atom).setParseAction(lambda t: MatchDFA(t[1], negate=True))
         | atom
     )
@@ -1092,17 +1445,39 @@ class Pattern:
         |
         # subtraction
         Literal("->>").setParseAction(lambda _: lambda x, y: MatchSubtractInside(x, y, proper=True))
-        | Literal("->").setParseAction(lambda _: lambda x, y: MatchSubtractInside(x, y, proper=False))
-        | Literal("-<<").setParseAction(lambda _: lambda x, y: MatchSubtractOutside(x, y, proper=True))
-        | Literal("-<").setParseAction(lambda _: lambda x, y: MatchSubtractOutside(x, y, proper=False))
-        | Literal("-##").setParseAction(lambda _: lambda x, y: MatchSubtractAlternating(x, y, ordered=True, from_right=True))
-        | Literal("_-##").setParseAction(lambda _: lambda x, y: MatchSubtractAlternating(x, y, ordered=True, from_right=False))
-        | Literal("-#").setParseAction(lambda _: lambda x, y: MatchSubtractAlternating(x, y, ordered=False))
-        | Literal("-^^").setParseAction(lambda _: lambda x, y: MatchSubtractInterleaved(x, y, proper=True, from_right=True))
-        | Literal("_-^^").setParseAction(lambda _: lambda x, y: MatchSubtractInterleaved(x, y, proper=True, from_right=False))
-        | Literal("-^").setParseAction(lambda _: lambda x, y: MatchSubtractInterleaved(x, y, proper=False))
-        | Literal("-").setParseAction(lambda _: lambda x, y: MatchSubtract(x, y, from_right=True, negate=False))
-        | Literal("_-").setParseAction(lambda _: lambda x, y: MatchSubtract(x, y, from_right=False, negate=False))
+        | Literal("->").setParseAction(
+            lambda _: lambda x, y: MatchSubtractInside(x, y, proper=False)
+        )
+        | Literal("-<<").setParseAction(
+            lambda _: lambda x, y: MatchSubtractOutside(x, y, proper=True)
+        )
+        | Literal("-<").setParseAction(
+            lambda _: lambda x, y: MatchSubtractOutside(x, y, proper=False)
+        )
+        | Literal("-##").setParseAction(
+            lambda _: lambda x, y: MatchSubtractAlternating(x, y, ordered=True, from_right=True)
+        )
+        | Literal("_-##").setParseAction(
+            lambda _: lambda x, y: MatchSubtractAlternating(x, y, ordered=True, from_right=False)
+        )
+        | Literal("-#").setParseAction(
+            lambda _: lambda x, y: MatchSubtractAlternating(x, y, ordered=False)
+        )
+        | Literal("-^^").setParseAction(
+            lambda _: lambda x, y: MatchSubtractInterleaved(x, y, proper=True, from_right=True)
+        )
+        | Literal("_-^^").setParseAction(
+            lambda _: lambda x, y: MatchSubtractInterleaved(x, y, proper=True, from_right=False)
+        )
+        | Literal("-^").setParseAction(
+            lambda _: lambda x, y: MatchSubtractInterleaved(x, y, proper=False)
+        )
+        | Literal("-").setParseAction(
+            lambda _: lambda x, y: MatchSubtract(x, y, from_right=True, negate=False)
+        )
+        | Literal("_-").setParseAction(
+            lambda _: lambda x, y: MatchSubtract(x, y, from_right=False, negate=False)
+        )
     )
     expr <<= infixNotation(
         items,
@@ -1170,7 +1545,6 @@ class Regex(ABC):
 
 
 class RegexChars(Regex):
-
     chars: str
 
     def __new__(cls, chars):
@@ -1225,11 +1599,9 @@ class RegexNegatedChars(Regex):
 
 
 class RegexStar(Regex):
-
     regex: Regex
 
     def __new__(cls, regex: Regex):
-
         # ε* = ε
         if regex == RegexConcat():
             return regex
@@ -1289,13 +1661,13 @@ class RegexStar(Regex):
 
 
 class RegexUnion(Regex):
-
     regexes: FrozenSet[Regex]
 
     def __new__(cls, regexes: Iterable[Regex] = ()):
-
         # (A|(B|C)|D)=(A|B|C|D)
-        regexes = {s for x in (r.regexes if isinstance(r, RegexUnion) else [r] for r in regexes) for s in x}
+        regexes = {
+            s for x in (r.regexes if isinstance(r, RegexUnion) else [r] for r in regexes) for s in x
+        }
 
         # A|B|C = B|C if A=>B
         for r in list(regexes):
@@ -1305,10 +1677,14 @@ class RegexUnion(Regex):
         # ([^ab]|[ac]|C) = ([^b]|C)
         if any(isinstance(r, RegexNegatedChars) for r in regexes):
             nchars = RegexNegatedChars(
-                set.intersection(*[set(r.chars) for r in regexes if isinstance(r, RegexNegatedChars)])
+                set.intersection(
+                    *[set(r.chars) for r in regexes if isinstance(r, RegexNegatedChars)]
+                )
                 - {c for r in regexes if isinstance(r, RegexChars) for c in r.chars}
             )
-            regexes -= {r for r in regexes if isinstance(r, RegexNegatedChars) or isinstance(r, RegexChars)}
+            regexes -= {
+                r for r in regexes if isinstance(r, RegexNegatedChars) or isinstance(r, RegexChars)
+            }
             if not any(regex_implies(nchars, s) for s in regexes):
                 regexes.add(nchars)
 
@@ -1321,14 +1697,26 @@ class RegexUnion(Regex):
 
         # AB|AC|D = A(B|C|ε)
         prefix = first(first(r.regexes) for r in regexes if isinstance(r, RegexConcat))
-        if prefix and all(isinstance(r, RegexConcat) and first(r.regexes) == prefix or r == prefix for r in regexes):
-            stripped = {RegexConcat(r.regexes[1:]) if isinstance(r, RegexConcat) else RegexConcat() for r in regexes}
+        if prefix and all(
+            isinstance(r, RegexConcat) and first(r.regexes) == prefix or r == prefix
+            for r in regexes
+        ):
+            stripped = {
+                RegexConcat(r.regexes[1:]) if isinstance(r, RegexConcat) else RegexConcat()
+                for r in regexes
+            }
             return RegexConcat((prefix, RegexUnion(stripped)))
 
         # BA|CA|DA = (B|C|ε)A
         suffix = first(r.regexes[-1] for r in regexes if isinstance(r, RegexConcat) and r.regexes)
-        if suffix and all(isinstance(r, RegexConcat) and r.regexes and r.regexes[-1] == suffix or r == suffix for r in regexes):
-            stripped = {RegexConcat(r.regexes[:-1]) if isinstance(r, RegexConcat) else RegexConcat() for r in regexes}
+        if suffix and all(
+            isinstance(r, RegexConcat) and r.regexes and r.regexes[-1] == suffix or r == suffix
+            for r in regexes
+        ):
+            stripped = {
+                RegexConcat(r.regexes[:-1]) if isinstance(r, RegexConcat) else RegexConcat()
+                for r in regexes
+            }
             return RegexConcat((RegexUnion(stripped), suffix))
 
         # AA*|ε = A*|ε
@@ -1336,7 +1724,10 @@ class RegexUnion(Regex):
             for r in {
                 r
                 for r in regexes
-                if isinstance(r, RegexConcat) and len(r.regexes) == 2 and isinstance(r.regexes[-1], RegexStar) and r.regexes[0] == r.regexes[-1].regex
+                if isinstance(r, RegexConcat)
+                and len(r.regexes) == 2
+                and isinstance(r.regexes[-1], RegexStar)
+                and r.regexes[0] == r.regexes[-1].regex
             }:
                 regexes.remove(r)
                 regexes.add(r.regexes[-1])
@@ -1360,8 +1751,12 @@ class RegexUnion(Regex):
 
         rs = [r for r in self.regexes if r != RegexConcat()]
         ss = [re.sub(r"^\((.*)\)$", r"\1", str(r)) for r in rs]
-        unbracketed = len(rs) == 1 and (isinstance(rs[0], RegexChars) or isinstance(rs[0], RegexNegatedChars))
-        return ("{}{}" if unbracketed else "({}){}").format("|".join(ss), "?" * (RegexConcat() in self.regexes))
+        unbracketed = len(rs) == 1 and (
+            isinstance(rs[0], RegexChars) or isinstance(rs[0], RegexNegatedChars)
+        )
+        return ("{}{}" if unbracketed else "({}){}").format(
+            "|".join(ss), "?" * (RegexConcat() in self.regexes)
+        )
 
     def to_repr(self):
         subrepr = ", ".join(r.to_repr() for r in self.regexes)
@@ -1378,21 +1773,28 @@ class RegexUnion(Regex):
 
 
 class RegexConcat(Regex):
-
     regexes: Tuple[Regex]
 
     def __new__(cls, regexes: Iterable[Regex] = ()):
-
         # (A∅B) = ∅
         if any(r == RegexUnion() for r in regexes):
             return RegexUnion()
         # (A(BC)D) = (ABCD)
-        regexes = [s for x in (r.regexes if isinstance(r, RegexConcat) else [r] for r in regexes) for s in x]
+        regexes = [
+            s
+            for x in (r.regexes if isinstance(r, RegexConcat) else [r] for r in regexes)
+            for s in x
+        ]
 
         # peephole optimizer
         while True:
             # A* A = A A* (canonical form)
-            i = first(i for i in range(len(regexes) - 1) if isinstance(regexes[i], RegexStar) and cast(RegexStar, regexes[i]).regex == regexes[i + 1])
+            i = first(
+                i
+                for i in range(len(regexes) - 1)
+                if isinstance(regexes[i], RegexStar)
+                and cast(RegexStar, regexes[i]).regex == regexes[i + 1]
+            )
             if i is not None:
                 regexes[i], regexes[i + 1] = regexes[i + 1], regexes[i]
                 continue
@@ -1402,7 +1804,9 @@ class RegexConcat(Regex):
                 for i in range(len(regexes) - 1)
                 if isinstance(regexes[i], RegexStar)
                 and isinstance(regexes[i + 1], RegexStar)
-                and regex_implies(cast(RegexStar, regexes[i]).regex, cast(RegexStar, regexes[i + 1]).regex)
+                and regex_implies(
+                    cast(RegexStar, regexes[i]).regex, cast(RegexStar, regexes[i + 1]).regex
+                )
             )
             if i is not None:
                 del regexes[i]
@@ -1413,7 +1817,9 @@ class RegexConcat(Regex):
                 for i in range(len(regexes) - 1)
                 if isinstance(regexes[i], RegexStar)
                 and isinstance(regexes[i + 1], RegexStar)
-                and regex_implies(cast(RegexStar, regexes[i + 1]).regex, cast(RegexStar, regexes[i]).regex)
+                and regex_implies(
+                    cast(RegexStar, regexes[i + 1]).regex, cast(RegexStar, regexes[i]).regex
+                )
             )
             if i is not None:
                 del regexes[i + 1]
@@ -1502,7 +1908,11 @@ def regex_implies(a: Regex, b: Regex) -> bool:
     elif isinstance(b, RegexStar) and regex_implies(a, b.regex):
         return True
     # ABC < D* if all(A < D)
-    elif isinstance(a, RegexConcat) and isinstance(b, RegexStar) and all(regex_implies(r, b) for r in a.regexes):
+    elif (
+        isinstance(a, RegexConcat)
+        and isinstance(b, RegexStar)
+        and all(regex_implies(r, b) for r in a.regexes)
+    ):
         return True
     # incompatible length
     elif a.min_length() < b.min_length() or a.max_length() > b.max_length():
@@ -1521,7 +1931,10 @@ def regex_implies(a: Regex, b: Regex) -> bool:
             return ans
         except ParseException:
             # currently doesn't work with e.g. emoji injected via \f or \w 🙁
-            warnings.warn("Cannot fully simplify regular expression due to non-Latin characters", UnicodeWarning)
+            warnings.warn(
+                "Cannot fully simplify regular expression due to non-Latin characters",
+                UnicodeWarning,
+            )
             return False
     return False
 
@@ -1529,7 +1942,16 @@ def regex_implies(a: Regex, b: Regex) -> bool:
 def regex(pattern: str) -> Regex:
     """Generate a Regex object directly from basic regular expression syntax. Useful for testing."""
 
-    from pyparsing import Forward, Literal, OneOrMore, ParserElement, Word, infixNotation, nums, opAssoc
+    from pyparsing import (
+        Forward,
+        Literal,
+        OneOrMore,
+        ParserElement,
+        Word,
+        infixNotation,
+        nums,
+        opAssoc,
+    )
 
     ParserElement.setDefaultWhitespaceChars("")
     ParserElement.enablePackrat()
@@ -1539,10 +1961,16 @@ def regex(pattern: str) -> Regex:
     literal_exclude = r"()+*.?{}^|$\[]"
     set_exclude = r"\]"
 
-    literal = Word(printables, excludeChars=literal_exclude, exact=1).setParseAction(lambda t: RegexChars(t[0]))
+    literal = Word(printables, excludeChars=literal_exclude, exact=1).setParseAction(
+        lambda t: RegexChars(t[0])
+    )
     dot = Literal(".").setParseAction(lambda t: RegexNegatedChars(""))
-    nset = ("[^" + Word(printables, excludeChars=set_exclude, min=1) + "]").setParseAction(lambda t: RegexNegatedChars(srange(f"[{t[1]}]")))
-    set = ("[" + Word(printables, excludeChars=set_exclude, min=1) + "]").setParseAction(lambda t: RegexChars(srange(f"[{t[1]}]")))
+    nset = ("[^" + Word(printables, excludeChars=set_exclude, min=1) + "]").setParseAction(
+        lambda t: RegexNegatedChars(srange(f"[{t[1]}]"))
+    )
+    set = ("[" + Word(printables, excludeChars=set_exclude, min=1) + "]").setParseAction(
+        lambda t: RegexChars(srange(f"[{t[1]}]"))
+    )
 
     expr = Forward()
     group = ("(" + expr + ")").setParseAction(lambda t: t[1])
@@ -1552,7 +1980,9 @@ def regex(pattern: str) -> Regex:
         | (atom + "+").setParseAction(lambda t: t[0] + RegexStar(t[0]))
         | (atom + "?").setParseAction(lambda t: RegexConcat() | t[0])
         | (atom + "{" + _0_to_99 + "}").setParseAction(lambda t: RegexConcat([t[0]] * t[2]))
-        | (atom + "{" + _0_to_99 + ",}").setParseAction(lambda t: RegexConcat([t[0]] * t[2]) + RegexStar(t[0]))
+        | (atom + "{" + _0_to_99 + ",}").setParseAction(
+            lambda t: RegexConcat([t[0]] * t[2]) + RegexStar(t[0])
+        )
         | atom
     )
     items = OneOrMore(item).setParseAction(lambda t: RegexConcat(t))
@@ -1563,7 +1993,8 @@ def regex(pattern: str) -> Regex:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description=r"""NFA-based pattern matcher supporting novel spatial conjunction and modifiers.
+        description=(
+            r"""NFA-based pattern matcher supporting novel spatial conjunction and modifiers.
 Supported syntax:
 
 CHARACTERS
@@ -1627,31 +2058,66 @@ OTHER MODIFIERS
 - (?M:P)        convert NFA to minimal DFA
 
 REFERENCES
-- (?<ID>P) define submatch capture group 
+- (?<ID>P) define submatch capture group
 - (?&ID=P) define subpattern for subsequent use
 - (?&ID)   use subpattern
 - \w       match word from dictionary file
 - \f       match FSM from external file
-""",
+"""
+        ),
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument("pattern", type=str, help="pattern to compile")
     parser.add_argument("files", type=str, nargs="*", help="filenames to search")
-    parser.add_argument("-d", dest="dict", metavar="PATH", type=str, help="dictionary file to use for \\w", default=None)
-    parser.add_argument("-f", dest="fsm", metavar="PATH", type=str, help="FSM file to use for \\f", default=None)
-    parser.add_argument("-D", dest="DFA", action="store_true", help="convert NFA to DFA", default=None)
-    parser.add_argument("-M", dest="min", action="store_true", help="convert NFA to minimal DFA ", default=None)
-    parser.add_argument("-i", dest="case_insensitive", action="store_true", help="case insensitive match")
+    parser.add_argument(
+        "-d",
+        dest="dict",
+        metavar="PATH",
+        type=str,
+        help="dictionary file to use for \\w",
+        default=None,
+    )
+    parser.add_argument(
+        "-f", dest="fsm", metavar="PATH", type=str, help="FSM file to use for \\f", default=None
+    )
+    parser.add_argument(
+        "-D", dest="DFA", action="store_true", help="convert NFA to DFA", default=None
+    )
+    parser.add_argument(
+        "-M", dest="min", action="store_true", help="convert NFA to minimal DFA ", default=None
+    )
+    parser.add_argument(
+        "-i", dest="case_insensitive", action="store_true", help="case insensitive match"
+    )
     parser.add_argument("-v", dest="invert", action="store_true", help="invert match")
-    parser.add_argument("-s", dest="svg", metavar="NAME", default=None, help="save FSM image and description")
-    parser.add_argument("-c", dest="console", action="store_true", help="save FSM image for console")
-    parser.add_argument("-C", dest="compact", action="store_true", help="compact start/end nodes in FSM image")
-    parser.add_argument("-x", dest="example", action="store_true", help="generate an example matching string")
-    parser.add_argument("-r", dest="regex", action="store_true", help="generate a standard equivalent regex")
-    parser.add_argument("-b", dest="bounds", action="store_true", help="generate lexicographic match bounds")
+    parser.add_argument(
+        "-s", dest="svg", metavar="NAME", default=None, help="save FSM image and description"
+    )
+    parser.add_argument(
+        "-c", dest="console", action="store_true", help="save FSM image for console"
+    )
+    parser.add_argument(
+        "-C", dest="compact", action="store_true", help="compact start/end nodes in FSM image"
+    )
+    parser.add_argument(
+        "-x", dest="example", action="store_true", help="generate an example matching string"
+    )
+    parser.add_argument(
+        "-r", dest="regex", action="store_true", help="generate a standard equivalent regex"
+    )
+    parser.add_argument(
+        "-b", dest="bounds", action="store_true", help="generate lexicographic match bounds"
+    )
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-X", dest="examples_only", metavar="N", type=int, help="output N example matches and quit")
-    group.add_argument("-R", dest="regex_only", action="store_true", help="output a standard equivalent regex and quit")
+    group.add_argument(
+        "-X", dest="examples_only", metavar="N", type=int, help="output N example matches and quit"
+    )
+    group.add_argument(
+        "-R",
+        dest="regex_only",
+        action="store_true",
+        help="output a standard equivalent regex and quit",
+    )
 
     args = parser.parse_args()
     global DICTIONARY_FSM, EXPLICIT_FSM, SLOW_SIMPLIFICATION
@@ -1688,7 +2154,9 @@ REFERENCES
 
     if args.regex_only:
         regex = pattern.nfa.regex()
-        regex_repr = "$." if regex == RegexUnion() else "^$" if regex == RegexConcat() else f"^{regex}$"
+        regex_repr = (
+            "$." if regex == RegexUnion() else "^$" if regex == RegexConcat() else f"^{regex}$"
+        )
         print(regex_repr)
         return
 
@@ -1705,11 +2173,15 @@ REFERENCES
         logger.info(f"Example match: {pattern.example()!r}")
 
     if args.bounds:
-        logger.info(f"Match bounds: {pattern.nfa.bound(True, 10)!r} to {pattern.nfa.bound(False, 10)!r}")
+        logger.info(
+            f"Match bounds: {pattern.nfa.bound(True, 10)!r} to {pattern.nfa.bound(False, 10)!r}"
+        )
 
     if args.regex:
         regex = pattern.nfa.regex()
-        regex_repr = "$." if regex == RegexUnion() else "^$" if regex == RegexConcat() else f"^{regex}$"
+        regex_repr = (
+            "$." if regex == RegexUnion() else "^$" if regex == RegexConcat() else f"^{regex}$"
+        )
         logger.info(f"Equivalent regex: {regex_repr}")
         min_length = regex.min_length()
         max_length = regex.max_length()
@@ -1731,7 +2203,10 @@ REFERENCES
                 match = pattern.match(word)
                 if match is not None:
                     if match:
-                        print(f"{word} ({', '.join(f'{k}={v}' for k,v in sorted(match.items()))})", flush=True)
+                        print(
+                            f"{word} ({', '.join(f'{k}={v}' for k,v in sorted(match.items()))})",
+                            flush=True,
+                        )
                     else:
                         print(word, flush=True)
 

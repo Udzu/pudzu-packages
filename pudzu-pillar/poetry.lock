@@ -1120,4 +1120,4 @@ text-extras = ["arabic-reshaper", "pyphen", "python-bidi"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "7b9d3e46e332dd1997b8a2308d5b1c3296a10266cd29067e2a5d83d0d599c67d"
+content-hash = "58464b9686d6c1f63dd1e9b162abb8dc70965744356b45c9cebfcc40874cc410"
