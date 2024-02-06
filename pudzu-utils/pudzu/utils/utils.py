@@ -24,7 +24,7 @@ from types import ModuleType
 from typing import Iterable, Mapping, Sequence
 from urllib.parse import urlparse
 
-from toolz.dicttoolz import *
+from toolz import itemmap, keyfilter, merge_with
 from toolz.functoolz import identity
 
 # Configure logging

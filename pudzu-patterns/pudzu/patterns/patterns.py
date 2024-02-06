@@ -13,11 +13,12 @@ from pathlib import Path
 from typing import Any, Callable, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, Union, cast
 
 import graphviz
-from pudzu.utils import first, merge, merge_with
+from pudzu.utils import first, merge_with
 from pyparsing import ParseException
 from pyparsing import printables as ascii_printables
 from pyparsing import pyparsing_unicode as ppu
 from pyparsing import srange
+from toolz import merge
 
 State = Any  # really it's Union[str, Tuple['State']]
 Move = Enum("Move", "EMPTY ALL")

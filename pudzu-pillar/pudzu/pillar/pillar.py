@@ -1,21 +1,43 @@
 import abc as ABC
+import itertools
 import logging
 import os
 import os.path
 import re
-from collections import abc, namedtuple
+from collections import OrderedDict, abc, namedtuple
 from functools import partial
 from io import BytesIO
 from itertools import zip_longest
-from math import ceil
+from math import ceil, fsum
 from numbers import Integral, Real
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
 import numpy as np
 from PIL import Image, ImageChops, ImageColor, ImageDraw, ImageFilter, ImageFont, ImageOps
-from pudzu.utils import *
-from pudzu.utils import identity, optional_import, optional_import_from, papply, raise_exception
+from pudzu.utils import (
+    CaseInsensitiveDict,
+    ValueBox,
+    ValueMappingDict,
+    artial,
+    clip,
+    first,
+    generate_batches,
+    generate_leafs,
+    identity,
+    make_iterable,
+    merge_dicts,
+    names_of_keyword_args,
+    non_string_iterable,
+    non_string_sequence,
+    optional_import,
+    optional_import_from,
+    papply,
+    raise_exception,
+    replace_any,
+    tmap,
+    url_to_filepath,
+)
 
 pyphen = optional_import("pyphen")
 requests = optional_import("requests")
@@ -35,7 +57,7 @@ class Alignment:
     """Alignment class, initialized from one or two floats between 0 and 1."""
 
     def __init__(self, align=None, x=None, y=None):
-        if any(x is not None for x in (x, y)):
+        if any(z is not None for z in (x, y)):
             if align is not None:
                 raise ValueError("Cannot specify both align and xy values")
             align = (x, y)
@@ -557,7 +579,7 @@ class SequenceColormap:
             raise ValueError("Colormap intervals must be positive")
         self.cmaps = cmaps
         self.intervals = [x / sum(intervals) for x in intervals]
-        self.accumulated = [math.fsum(self.intervals[:i]) for i in range(len(intervals))] + [1.0]
+        self.accumulated = [fsum(self.intervals[:i]) for i in range(len(intervals))] + [1.0]
 
     def __repr__(self):
         return "SequenceColormap({})".format(

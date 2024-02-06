@@ -1,6 +1,6 @@
 import pytest
 
-from pudzu.patterns import *
+from pudzu.patterns import regex
 
 
 @pytest.mark.parametrize(
