@@ -20,6 +20,7 @@ patterns = "pudzu.patterns:main"
 
 [tool.poetry.dependencies]
 python = "^3.7"
+graphviz = "^0.13.2"
 pyparsing = "^3.0"
 pudzu-utils = "^0.9.3"
 
