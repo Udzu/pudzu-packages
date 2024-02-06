@@ -1404,8 +1404,11 @@ class Pattern:
             + Option(":" + Option(_m99_to_99, 1), 1)
             + "]"
         ).setParseAction(lambda t: MatchSlice(t[1], t[3], t[5], t[-2]))
-        | ("(?/" + expr + "/" + expr + "/" + expr + "/" + Option("s") + ")").setParseAction(
-            lambda t: MatchSubtractInside(t[1], t[3], proper=(t[7] == "s"), replace=t[5])
+        | ("(?z:" + expr + ")[" + expr + "][" + expr + "]").setParseAction(
+            lambda t: MatchSubtractInside(t[1], t[3], proper=False, replace=t[5])
+        )
+        | ("(?Z:" + expr + ")[" + expr + "][" + expr + "]").setParseAction(
+            lambda t: MatchSubtractInside(t[1], t[3], proper=True, replace=t[5])
         )
         | ("(?&" + _id + "=" + expr + ")").setParseAction(
             lambda t: SUBPATTERNS.update({t[1]: t[3]}) or MatchEmpty()
@@ -2052,8 +2055,8 @@ OTHER MODIFIERS
 - (?R<=n:P)     rotated by 1 to n characters left or right
 - (?S:P)[m:n]   sliced match
 - (?S:P)[m:n:s] sliced match with step
-- (?/P/Q/R/)    replace Q inside P by R
-- (?/P/Q/R/s)   replace Q strictly inside P by R
+- (?z:P)[Q][R]  replace Q inside P by R
+- (?Z:P)[Q][R]  replace Q strictly inside P by R
 - (?D:P)        convert NFA to DFA
 - (?M:P)        convert NFA to minimal DFA
 

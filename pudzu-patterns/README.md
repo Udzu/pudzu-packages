@@ -392,14 +392,14 @@ patterns "(?S:(me)+)[1::2]" -M
 
 ![slicing NFA](images/slicing.png)
 
-**Replacement** (written `(?/A/B/C/)` or `(?/A/B/C/s)`). This behaves like subtraction
+**Replacement** (written `(?z:A)[B][C]` or `(?Z:A)[B][C]`). This behaves like subtraction
 inside, except that it inserts a string matching a third expression C in place of the
-removed substring. For example, "Lundon" satisfies `(?/London/o/u/)`. The implementation
+removed substring. For example, "Lundon" satisfies `(?z:London)[o][u]`. The implementation
 is as for subtraction, but the left and right states are wired via a copy of C.
-Like for subtraction, there is a strict version `(?/A/B/C/s)`.
+Like for subtraction, there is a strict version `(?Z:A)[B][C]`.
 
 ```bash
-patterns "(?/London/o/u/)" -M
+patterns "(?z:London)[o][u]" -M
 ```
 
 ![replacement NFA](images/replacement.png)
