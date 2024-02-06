@@ -332,7 +332,7 @@ class NFA:
                     # TODO: match with supported scripts?
                     least_any = minmax(
                         set(ascii_printables + " ")
-                        - {i for (s, i) in self.transitions if s == state}
+                        - {i for (s, i) in self.transitions if s == state if isinstance(i, str)}
                     )
                     if not least_char or least_any == minmax((least_any, least_char)):
                         least_char, next_state = least_any, first(
@@ -1334,7 +1334,7 @@ class Pattern:
     # parsing (should really go via an AST here)
     from pyparsing import Forward, Group, Literal, OneOrMore
     from pyparsing import Optional as Option
-    from pyparsing import (
+    from pyparsing import (  # type: ignore[misc]
         ParserElement,
         Word,
         alphanums,
@@ -1732,6 +1732,7 @@ class RegexUnion(Regex):
                 and isinstance(r.regexes[-1], RegexStar)
                 and r.regexes[0] == r.regexes[-1].regex
             }:
+                assert isinstance(r, RegexConcat)
                 regexes.remove(r)
                 regexes.add(r.regexes[-1])
                 if RegexConcat() in regexes:
@@ -1776,7 +1777,7 @@ class RegexUnion(Regex):
 
 
 class RegexConcat(Regex):
-    regexes: Tuple[Regex]
+    regexes: Tuple[Regex, ...]
 
     def __new__(cls, regexes: Iterable[Regex] = ()):
         # (A∅B) = ∅
