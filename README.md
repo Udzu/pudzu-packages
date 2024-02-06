@@ -14,6 +14,7 @@ The packages can be installed individually using either `pip install [package-na
 
 - [pudzu-utils](pudzu-utils) - various utility functions and data structures.
 - [pudzu-dates](pudzu-dates) - date classes supporting flexible calendars, deltas and ranges.
+- [pudzu-patterns](pudzu-patterns) - NFA-based pattern matcher supporting novel operations and modifiers.
 - [pudzu-pillar](pudzu-pillar) - various monkey-patched Pillow utilities.
 - [pudzu-charts](pudzu-charts) - Pillow-based charting tools.
 
