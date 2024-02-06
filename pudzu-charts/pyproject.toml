@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pudzu-charts"
-version = "0.9.2"
+version = "0.9.3"
 description = "Pillow-based charting tools"
 packages = [{ include = "pudzu" }]
 keywords = ["pudzu", "charts", "pillow"]
@@ -18,9 +18,9 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.8"
 pandas = "^1.4"
-pudzu-utils = "^0.9.2"
-pudzu-dates = "^0.9.1"
-pudzu-pillar = "^0.9.2"
+pudzu-utils = "^0.9.3"
+pudzu-dates = "^0.9.3"
+pudzu-pillar = "^0.9.3"
 
 [tool.poetry.dev-dependencies]
 mypy = "*"
@@ -207,6 +207,5 @@ enable = [
 ]
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
-
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

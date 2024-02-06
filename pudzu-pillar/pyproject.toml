@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pudzu-pillar"
-version = "0.9.2"
+version = "0.9.3"
 description = "Various imaging utilities, monkey-patched onto Pillow"
 packages = [{ include = "pudzu" }]
 keywords = ["pudzu", "imaging", "pillow"]
@@ -19,7 +19,7 @@ license = "MIT"
 python = "^3.7"
 numpy = "^1.16.0"
 Pillow = ">=6.0.0"
-pudzu-utils = "^0.9.2"
+pudzu-utils = "^0.9.3"
 requests = { version = "^2.22.0", optional = true }
 scipy = { version = "^1.3.1", optional = true }
 pyphen = { version = "^0.10.0", optional = true }
@@ -210,6 +210,5 @@ enable = [
 ]
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
-
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
