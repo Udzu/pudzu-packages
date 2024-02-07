@@ -547,7 +547,7 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 
 ![alt](images/topalette.png)
 
-**Image.to_rgba**: convert an image to RGBA, or leave as is if it already is one.
+**Image.to_rgba**: convert an image to RGBA, or leave as is if it already is one. Similarly, **Image.to_rgb** for RGB.
 
 ### ImageShape
 

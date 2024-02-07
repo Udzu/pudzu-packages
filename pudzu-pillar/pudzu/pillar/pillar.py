@@ -1124,6 +1124,10 @@ class _Image(Image.Image):  # pylint: disable=abstract-method
         """Return an RGBA copy of the image (or leave unchanged if it already is)."""
         return self if self.mode == "RGBA" else self.convert("RGBA")
 
+    def to_rgb(self):
+        """Return an RGB copy of the image (or leave unchanged if it already is)."""
+        return self if self.mode == "RGB" else self.convert("RGB")
+
     def to_palette(self, palette, dither=False):
         """Return a P-mode copy of the image with a given palette."""
         rgb_img = self.convert("RGB")
