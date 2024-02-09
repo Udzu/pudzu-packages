@@ -209,7 +209,7 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 
 ### ImageDraw
 
-**ImageDraw.text_size**: same as ImageDraw.Draw.textsize but doesn't require a drawable object, and handles descenders on multiline text and negative horizontal offsets.
+**ImageDraw.text_size**: returns the size of a given string in pixels. Based on ImageDraw.Draw.textbbox but doesn't require a drawable object, and handles negative horizontal offsets.
 
 ```python
 >> ImageDraw.text_size("The rain", arial(24))

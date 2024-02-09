@@ -39,7 +39,7 @@ AttributeError: Missing module 'module' has no attribute 'fn'
 ```python
 >> d = CaseInsensitiveDict({'Bob': 4098, 'Hope': 4139})
 >> d
-CaseInsensitiveDict({'Hope': 4139, 'Bob': 4098}, base_type=dict)
+CaseInsensitiveDict({'Hope': 4139, 'Bob': 4098}, base_type=dict, key_choice=KeyEquivalenceDict.USE_LAST_KEY)
 >> d['BOB']
 4098
 >> del d['hope']
@@ -81,7 +81,7 @@ ValueMappingDict({'the': 'RAIN', 'in': 'SPAIN', 'stays': 'MAINLY'}, value_mappin
 **ignoring_extra_args**: wrapper that calls the function with the correct number of positional arguments and supported keyword arguments only. Useful for flexible user input.
 
 ```python
->> ignoring_extra_args(operator.eq)(4.99998, 5.0, 1e-5)
+>> ignoring_extra_args(operator.eq)(4.99998, 5.0, 1e-3)
 False
 >> ignoring_extra_args(lambda x,y,n=0: abs(x-y)<=n)(4.99998, 5.0, 1e-3)
 True
