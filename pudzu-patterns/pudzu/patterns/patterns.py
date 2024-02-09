@@ -2143,7 +2143,7 @@ REFERENCES
     if args.case_insensitive:
         pattern = f"(?i:{pattern})"
     if args.invert:
-        pattern = f"!({pattern})"
+        pattern = f"¬({pattern})"
     if args.min:
         pattern = f"(?M:{pattern})"
     elif args.DFA:
