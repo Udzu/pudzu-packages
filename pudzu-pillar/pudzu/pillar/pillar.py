@@ -4,12 +4,14 @@ import logging
 import os
 import os.path
 import re
+import tempfile
 from collections import OrderedDict, abc, namedtuple
 from functools import partial
 from io import BytesIO
 from itertools import zip_longest
 from math import ceil, fsum
 from numbers import Integral, Real
+from pathlib import Path
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
@@ -1120,6 +1122,18 @@ class _Image(Image.Image):  # pylint: disable=abstract-method
             padding=line_spacing,
         ).pad(padding, bg=bg)
 
+    @classmethod
+    def from_figure(cls, figure, size, dpi=None):
+        """Create image from a matplotlib figure."""
+        w, h = size
+        if dpi is None:
+            dpi = figure.dpi
+        figure.set_size_inches(w / dpi, h / dpi)
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            path = Path(tmpdirname) / "figure.png"
+            figure.savefig(path, dpi=dpi)
+            return Image.open(path)
+
     def to_rgba(self):
         """Return an RGBA copy of the image (or leave unchanged if it already is)."""
         return self if self.mode == "RGBA" else self.convert("RGBA")
@@ -1505,6 +1519,7 @@ Image.generate_bounded = _Image.generate_bounded
 Image.from_text_bounded = _Image.from_text_bounded
 Image.from_markup_bounded = _Image.from_markup_bounded
 Image.from_text_justified = _Image.from_text_justified
+Image.from_figure = _Image.from_figure
 Image.EMPTY_IMAGE = Image.new("RGBA", (0, 0))
 
 Image.Image.to_rgba = _Image.to_rgba
