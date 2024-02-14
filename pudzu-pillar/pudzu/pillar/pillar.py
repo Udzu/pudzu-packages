@@ -1123,12 +1123,13 @@ class _Image(Image.Image):  # pylint: disable=abstract-method
         ).pad(padding, bg=bg)
 
     @classmethod
-    def from_figure(cls, figure, size, dpi=None):
-        """Create image from a matplotlib figure."""
-        w, h = size
+    def from_figure(cls, figure, size=None, dpi=None):
+        """Create image from a matplotlib figure. May resize the original."""
         if dpi is None:
             dpi = figure.dpi
-        figure.set_size_inches(w / dpi, h / dpi)
+        if size is not None:
+            w, h = size
+            figure.set_size_inches(w / dpi, h / dpi)
         with tempfile.TemporaryDirectory() as tmpdirname:
             path = Path(tmpdirname) / "figure.png"
             figure.savefig(path, dpi=dpi)

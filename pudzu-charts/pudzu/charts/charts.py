@@ -1660,3 +1660,122 @@ def month_chart(
     )
     calendar_img = Image.from_column([month_img, month_image, grid_img], xalign=0).pad(padding[::-1], fg)
     return calendar_img
+
+
+def line_chart(
+    data,
+    width,
+    height,
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    xticks=...,
+    yticks=...,
+    xlabels=...,
+    ylabels=...,
+    xlabel=None,
+    ylabel=None,
+    title=None,
+    grid=True,
+    legend=False,
+    return_figure=False,
+):
+    """Plot a line chart using matplotlib. [Work in progress]
+
+    - data (pandas dataframe): table to plot
+    - width (int): chart width
+    - height (int): chart height
+    - xmin (value): minimum x value [auto]
+    - xmax (value): maximum x value [auto]
+    - ymin (value): minimum y value [auto]
+    - ymax (value): maximum y vaue [auto]
+    - xticks (Location/sequence/interval): locator or sequence or interval to use for x tick locations [auto]
+    - yticks (Location/sequence/interval): locator or sequence or interval to use for y tick locations [auto]
+    - xlabels (Formatter/format/sequence/value -> string): formatter, string format, sequence or function to use for x axis labels [auto]
+    - ylabels (Formatter/format/sequence/value -> string): formatter, string format, sequence or function to use for y axis labels [auto]
+    - xlabel (string): x axis label [none]
+    - ylabel (string): y axis label [none]
+    - title (string): title [none]
+    - grid (boolean): whether to include grid [True]
+    - legend (boolean): whether to include a legend [False]
+    - return_figure (boolean): whether to return the figure rather than the image [False]
+    """
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import (
+        FixedFormatter,
+        FixedLocator,
+        Formatter,
+        FuncFormatter,
+        Locator,
+        MultipleLocator,
+        NullFormatter,
+        NullLocator,
+        StrMethodFormatter,
+    )
+
+    # TODO: padding
+    fig, ax = plt.subplots()
+
+    try:
+        lines = ax.plot(data)
+        if isinstance(data, pd.DataFrame):
+            for line, label in zip(lines, data.columns):
+                line.set_label(label)
+
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+
+        def set_xyticks(ticks, axis):
+            if isinstance(ticks, Locator):
+                locator = ticks
+            elif non_string_sequence(ticks):
+                locator = FixedLocator(ticks)
+            elif isinstance(ticks, (int, float)):
+                locator = MultipleLocator(ticks)
+            elif ticks is None:
+                locator = NullLocator()
+            elif ticks is ...:
+                locator = None
+            if locator is not None:
+                axis.set_major_locator(locator)
+
+        set_xyticks(xticks, ax.xaxis)
+        set_xyticks(yticks, ax.yaxis)
+
+        def set_xylabels(labels, axis):
+            if isinstance(labels, Formatter):
+                formatter = labels
+            elif isinstance(labels, str):
+                formatter = StrMethodFormatter(labels)
+            elif non_string_sequence(labels, str):
+                formatter = FixedFormatter(labels)
+            elif callable(labels):
+                formatter = FuncFormatter(ignoring_extra_args(labels))
+            elif labels is None:
+                formatter = NullFormatter()
+            elif labels is ...:
+                formatter = None
+            else:
+                raise ValueError(f"Unrecognised label type: {labels}")
+            if formatter is not None:
+                axis.set_major_formatter(formatter)
+
+        set_xylabels(xlabels, ax.xaxis)
+        set_xylabels(ylabels, ax.yaxis)
+
+        # TODO: support images?
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_title(title)
+
+        if grid:
+            ax.grid(color="gray", linewidth=0.5)
+
+        ax.legend()
+
+        img = Image.from_figure(fig, (width, height), 100)
+    finally:
+        plt.close(fig)
+
+    return fig if return_figure else img
