@@ -1772,7 +1772,8 @@ def line_chart(
         if grid:
             ax.grid(color="gray", linewidth=0.5)
 
-        ax.legend()
+        if legend:
+            ax.legend()
     finally:
         if not return_figure:
             plt.close(fig)
