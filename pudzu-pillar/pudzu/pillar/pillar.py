@@ -17,6 +17,7 @@ from urllib.request import urlopen
 
 import numpy as np
 from PIL import Image, ImageChops, ImageColor, ImageDraw, ImageFilter, ImageFont, ImageOps
+
 from pudzu.utils import (
     CaseInsensitiveDict,
     ValueBox,
@@ -1135,6 +1136,15 @@ class _Image(Image.Image):  # pylint: disable=abstract-method
             figure.savefig(path, dpi=dpi)
             return Image.open(path)
 
+    def to_offsetimage(self):
+        """Return a matplotlib OffsetImage of the image."""
+        import matplotlib.pyplot as plt
+        from matplotlib.offsetbox import OffsetImage
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            path = Path(tmpdirname) / "image.png"
+            self.save(path)
+            return OffsetImage(plt.imread(path), dpi_cor=False)
+
     def to_rgba(self):
         """Return an RGBA copy of the image (or leave unchanged if it already is)."""
         return self if self.mode == "RGBA" else self.convert("RGBA")
@@ -1525,6 +1535,7 @@ Image.EMPTY_IMAGE = Image.new("RGBA", (0, 0))
 
 Image.Image.to_rgba = _Image.to_rgba
 Image.Image.to_palette = _Image.to_palette
+Image.Image.to_offsetimage = _Image.to_offsetimage
 Image.Image.overlay = _Image.overlay
 Image.Image.place = _Image.place
 Image.Image.pad = _Image.pad

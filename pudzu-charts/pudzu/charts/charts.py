@@ -1694,8 +1694,8 @@ def line_chart(
     - ymax (value): maximum y vaue [auto]
     - xticks (Location/sequence/interval): locator or sequence or interval to use for x tick locations [auto]
     - yticks (Location/sequence/interval): locator or sequence or interval to use for y tick locations [auto]
-    - xlabels (Formatter/format/sequence/value -> string): formatter, string format, sequence or function to use for x axis labels [auto]
-    - ylabels (Formatter/format/sequence/value -> string): formatter, string format, sequence or function to use for y axis labels [auto]
+    - xlabels (Formatter/format/sequence/value -> text/image): formatter, string format, sequence or function to use for x axis labels [auto]
+    - ylabels (Formatter/format/sequence/value -> text/image): formatter, string format, sequence or function to use for y axis labels [auto]
     - xlabel (string): x axis label [none]
     - ylabel (string): y axis label [none]
     - title (string): title [none]
@@ -1705,11 +1705,11 @@ def line_chart(
     - return_figure (boolean): whether to return the figure rather than the image [False]
     """
     import matplotlib.pyplot as plt
+    from matplotlib.offsetbox import AnnotationBbox
     from matplotlib.ticker import (
         FixedFormatter,
         FixedLocator,
         Formatter,
-        FuncFormatter,
         Locator,
         MultipleLocator,
         NullFormatter,
@@ -1744,6 +1744,8 @@ def line_chart(
             locator = NullLocator()
         elif ticks is ...:
             locator = None
+        else:
+            raise ValueError(f"Unrecognised tick type: {ticks}")
         if locator is not None:
             axis.set_major_locator(locator)
 
@@ -1751,14 +1753,29 @@ def line_chart(
     set_xyticks(yticks, ax.yaxis)
 
     def set_xylabels(labels, axis):
+        if callable(labels):
+            # this generates a warning, but handles images (unlike FuncFormatter)
+            labels = [labels(loc) for loc in axis.get_ticklocs()]
         if isinstance(labels, Formatter):
             formatter = labels
         elif isinstance(labels, str):
             formatter = StrMethodFormatter(labels)
-        elif non_string_sequence(labels, str):
-            formatter = FixedFormatter(labels)
-        elif callable(labels):
-            formatter = FuncFormatter(ignoring_extra_args(labels))
+        elif non_string_sequence(labels):
+            text_labels = [label if isinstance(label, str) else None for label in labels]
+            formatter = FixedFormatter(text_labels)
+            # following is very hacky, will probably need tweaking with use
+            for loc, img in zip(axis.get_ticklocs(), labels):
+                if isinstance(img, Image.Image):
+                    im = img.to_offsetimage()
+                    if axis is ax.xaxis:
+                        abox = AnnotationBbox(
+                            im, (loc, ax.get_ylim()[0]), frameon=False, xybox=(0, -16), boxcoords="offset points"
+                        )
+                    else:
+                        abox = AnnotationBbox(
+                            im, (ax.get_xlim()[0], loc), frameon=False, xybox=(-16, 0), boxcoords="offset points"
+                        )
+                    ax.add_artist(abox)
         elif labels is None:
             formatter = NullFormatter()
         elif labels is ...:
