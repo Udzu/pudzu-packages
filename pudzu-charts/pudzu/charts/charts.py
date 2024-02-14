@@ -12,6 +12,7 @@ from typing import Mapping, OrderedDict
 
 import numpy as np
 import pandas as pd
+from PIL import ImageColor
 from PIL.ImageDraw import ImageDraw
 from PIL.ImageFont import ImageFont
 from pudzu.dates import ApproximateDate, DateFilter, DatePrecision, DateRange
@@ -1677,6 +1678,7 @@ def line_chart(
     xlabel=None,
     ylabel=None,
     title=None,
+    colors=VegaPalette10,
     grid=True,
     legend=False,
     return_figure=False,
@@ -1697,6 +1699,7 @@ def line_chart(
     - xlabel (string): x axis label [none]
     - ylabel (string): y axis label [none]
     - title (string): title [none]
+    - colors (color/colors): colors to use for the lines [Vega palette]
     - grid (boolean): whether to include grid [True]
     - legend (boolean): whether to include a legend [False]
     - return_figure (boolean): whether to return the figure rather than the image [False]
@@ -1717,65 +1720,71 @@ def line_chart(
     # TODO: padding
     fig, ax = plt.subplots()
 
-    try:
-        lines = ax.plot(data)
-        if isinstance(data, pd.DataFrame):
-            for line, label in zip(lines, data.columns):
-                line.set_label(label)
+    lines = ax.plot(data)
+    if isinstance(data, pd.DataFrame):
+        for line, label in zip(lines, data.columns):
+            line.set_label(label)
+    if colors is not None:
+        if not non_string_sequence(colors):
+            colors = [colors] * len(lines)
+        for line, color in zip(lines, colors):
+            line.set_color(ImageColor.to_hex(color, alpha=True))
 
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(ymin, ymax)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
 
-        def set_xyticks(ticks, axis):
-            if isinstance(ticks, Locator):
-                locator = ticks
-            elif non_string_sequence(ticks):
-                locator = FixedLocator(ticks)
-            elif isinstance(ticks, (int, float)):
-                locator = MultipleLocator(ticks)
-            elif ticks is None:
-                locator = NullLocator()
-            elif ticks is ...:
-                locator = None
-            if locator is not None:
-                axis.set_major_locator(locator)
+    def set_xyticks(ticks, axis):
+        if isinstance(ticks, Locator):
+            locator = ticks
+        elif non_string_sequence(ticks):
+            locator = FixedLocator(ticks)
+        elif isinstance(ticks, (int, float)):
+            locator = MultipleLocator(ticks)
+        elif ticks is None:
+            locator = NullLocator()
+        elif ticks is ...:
+            locator = None
+        if locator is not None:
+            axis.set_major_locator(locator)
 
-        set_xyticks(xticks, ax.xaxis)
-        set_xyticks(yticks, ax.yaxis)
+    set_xyticks(xticks, ax.xaxis)
+    set_xyticks(yticks, ax.yaxis)
 
-        def set_xylabels(labels, axis):
-            if isinstance(labels, Formatter):
-                formatter = labels
-            elif isinstance(labels, str):
-                formatter = StrMethodFormatter(labels)
-            elif non_string_sequence(labels, str):
-                formatter = FixedFormatter(labels)
-            elif callable(labels):
-                formatter = FuncFormatter(ignoring_extra_args(labels))
-            elif labels is None:
-                formatter = NullFormatter()
-            elif labels is ...:
-                formatter = None
-            else:
-                raise ValueError(f"Unrecognised label type: {labels}")
-            if formatter is not None:
-                axis.set_major_formatter(formatter)
+    def set_xylabels(labels, axis):
+        if isinstance(labels, Formatter):
+            formatter = labels
+        elif isinstance(labels, str):
+            formatter = StrMethodFormatter(labels)
+        elif non_string_sequence(labels, str):
+            formatter = FixedFormatter(labels)
+        elif callable(labels):
+            formatter = FuncFormatter(ignoring_extra_args(labels))
+        elif labels is None:
+            formatter = NullFormatter()
+        elif labels is ...:
+            formatter = None
+        else:
+            raise ValueError(f"Unrecognised label type: {labels}")
+        if formatter is not None:
+            axis.set_major_formatter(formatter)
 
-        set_xylabels(xlabels, ax.xaxis)
-        set_xylabels(ylabels, ax.yaxis)
+    set_xylabels(xlabels, ax.xaxis)
+    set_xylabels(ylabels, ax.yaxis)
 
-        # TODO: support images?
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-        ax.set_title(title)
+    # TODO: support images?
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
 
-        if grid:
-            ax.grid(color="gray", linewidth=0.5)
+    if grid:
+        ax.grid(color="gray", linewidth=0.5)
 
-        if legend:
-            ax.legend()
-    finally:
-        if not return_figure:
-            plt.close(fig)
+    if legend:
+        ax.legend()
 
-    return fig if return_figure else Image.from_figure(fig, (width, height), 100)
+    if return_figure:
+        return fig
+
+    img = Image.from_figure(fig, (width, height), 100)
+    plt.close(fig)
+    return img
