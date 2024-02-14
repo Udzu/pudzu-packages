@@ -1773,9 +1773,8 @@ def line_chart(
             ax.grid(color="gray", linewidth=0.5)
 
         ax.legend()
-
-        img = Image.from_figure(fig, (width, height), 100)
     finally:
-        plt.close(fig)
+        if not return_figure:
+            plt.close(fig)
 
-    return fig if return_figure else img
+    return fig if return_figure else Image.from_figure(fig, (width, height), 100)
