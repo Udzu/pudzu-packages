@@ -12,6 +12,7 @@ from typing import Mapping, OrderedDict
 
 import numpy as np
 import pandas as pd
+from matplotlib.ticker import FuncFormatter
 from PIL import ImageColor
 from PIL.ImageDraw import ImageDraw
 from PIL.ImageFont import ImageFont
@@ -1708,8 +1709,8 @@ def line_chart(
     - ylabel (string): y axis label [none]
     - title (string): title [none]
     - colors (color/colors): colors to use for the lines [Vega palette]
-    - grid (boolean): whether to include grid; optionally grid argument dict [True]
-    - legend (boolean): whether to include a legend; optionally legend argument dict [False]
+    - grid (boolean/dict): whether to include grid; optionally grid argument dict [True]
+    - legend (boolean/dict): whether to include a legend; optionally legend argument dict [False]
     - return_figure (boolean): whether to return the figure and axes rather than the image [False]
     """
     import matplotlib.pyplot as plt
@@ -1778,15 +1779,16 @@ def line_chart(
 
     def set_xylabels(labels, axis):
         if callable(labels):
-            # this generates a warning, but handles images (unlike FuncFormatter)
+            # assumes we don't change the ticks after this (needed to support images)
             labels = [labels(loc) for loc in axis.get_ticklocs()]
         if isinstance(labels, Formatter):
             formatter = labels
         elif isinstance(labels, str):
             formatter = StrMethodFormatter(labels)
         elif non_string_sequence(labels):
-            text_labels = [label if isinstance(label, str) else None for label in labels]
-            formatter = FixedFormatter(text_labels)
+            formatter = FuncFormatter(
+                lambda _, pos: labels[pos] if pos < len(labels) and isinstance(labels[pos], str) else None
+            )
             # following is very hacky, will probably need tweaking with use
             for loc, img in zip(axis.get_ticklocs(), labels):
                 if isinstance(img, Image.Image):
