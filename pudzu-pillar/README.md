@@ -339,6 +339,8 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 
 ![alt](images/fromgradient2.png)
 
+**Image.from_figure**: create an image from a matplotlib figure.
+
 **Image.EMPTY_IMAGE**: an empty "RGBA" image.
 
 ```python
@@ -548,6 +550,8 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 ![alt](images/topalette.png)
 
 **Image.to_rgba**: convert an image to RGBA, or leave as is if it already is one. Similarly, **Image.to_rgb** for RGB.
+
+**Image.to_offsetimage**: convert an image to a matplotlib OffsetImage.
 
 ### ImageShape
 

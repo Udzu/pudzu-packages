@@ -6,6 +6,8 @@ Pillow-based charting.
 ## Dependencies
 *Required*: [pandas](http://pandas.pydata.org/), [pudzu-pillar](../pudzu-pillar/README.md), [pudzu-dates](../pudzu-dates/README.md).
 
+*Optional*: [matplotlib](https://matplotlib.org/) (for line charts).
+
 ## Documentation
 
 Five chart types are currently supported: **bar charts**, **time charts**, **grid charts**, **map charts** and **calendar charts**. For usage information, see the docstrings or [sample scripts](https://github.com/Udzu/pudzu/).
