@@ -539,7 +539,7 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 ```
 ![alt](images/addshadow.png)
 
-**Image.to_palette**: convert an image to "P" (palette) mode, using a given palette and optional dithering.
+**Image.Image.to_palette**: convert an image to "P" (palette) mode, using a given palette and optional dithering.
 
 ```python
 >> pal = ["red", "green", "blue", "white", "black"]
@@ -549,9 +549,9 @@ RGBA(red=187, green=188, blue=0, alpha=255)
 
 ![alt](images/topalette.png)
 
-**Image.to_rgba**: convert an image to RGBA, or leave as is if it already is one. Similarly, **Image.to_rgb** for RGB.
+**Image.Image.to_rgba**: convert an image to RGBA, or leave as is if it already is one. Similarly, **Image.Image.to_rgb** for RGB.
 
-**Image.to_offsetimage**: convert an image to a matplotlib OffsetImage.
+**Image.Image.to_offsetimage**: convert an image to a matplotlib OffsetImage.
 
 ### ImageShape
 
