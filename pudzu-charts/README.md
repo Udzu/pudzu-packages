@@ -53,3 +53,9 @@ Five chart types are currently supported: **bar charts**, **time charts**, **gri
 **month_chart**: generate a calendar chart for a given month; supports non-Western calendars.
 
 ![jerusalem time chart example](images/trump.jpg)
+
+### Line charts
+
+**line_chart**: geerate a line chart; supports area charts, as well as flexible coloring and labeling. Requires matplotlib.
+
+![line chart example](images/nhs.jpg)

@@ -1663,10 +1663,17 @@ def month_chart(
     return calendar_img
 
 
+class LineChartType(Enum):
+    """Line Chart types."""
+
+    LINE, AREA_OVERLAYED, AREA_STACKED = range(3)
+
+
 def line_chart(
     data,
     width,
     height,
+    type=LineChartType.LINE,
     xmin=None,
     xmax=None,
     ymin=None,
@@ -1681,6 +1688,7 @@ def line_chart(
     colors=VegaPalette10,
     grid=True,
     legend=False,
+    dpi=100,
     return_figure=False,
 ):
     """Plot a line chart using matplotlib. [Work in progress]
@@ -1700,8 +1708,8 @@ def line_chart(
     - ylabel (string): y axis label [none]
     - title (string): title [none]
     - colors (color/colors): colors to use for the lines [Vega palette]
-    - grid (boolean): whether to include grid [True]
-    - legend (boolean): whether to include a legend [False]
+    - grid (boolean): whether to include grid; optionally grid argument dict [True]
+    - legend (boolean): whether to include a legend; optionally legend argument dict [False]
     - return_figure (boolean): whether to return the figure rather than the image [False]
     """
     import matplotlib.pyplot as plt
@@ -1720,11 +1728,19 @@ def line_chart(
     # TODO: padding
     fig, ax = plt.subplots()
 
-    lines = ax.plot(data)
+    if type is LineChartType.LINE:
+        lines = ax.plot(data)
+    elif type is LineChartType.AREA_OVERLAYED:
+        lines = []
+        for col in data.columns:
+            lines.append(ax.fill_between(list(data.index), list(data[col])))
+    else:
+        raise NotImplementedError
+
     if isinstance(data, pd.DataFrame):
         for line, label in zip(lines, data.columns):
             line.set_label(label)
-    if colors is not None:
+    if colors not in (None, ...):
         if not non_string_sequence(colors):
             colors = [colors] * len(lines)
         for line, color in zip(lines, colors):
@@ -1794,14 +1810,20 @@ def line_chart(
     ax.set_title(title)
 
     if grid:
-        ax.grid(color="gray", linewidth=0.5)
+        if isinstance(grid, Mapping):
+            ax.grid(**grid)
+        else:
+            ax.grid(color="gray", linewidth=0.5)
 
     if legend:
-        ax.legend()
+        if isinstance(legend, Mapping):
+            ax.legend(**legend)
+        else:
+            ax.legend()
 
     if return_figure:
         return fig
 
-    img = Image.from_figure(fig, (width, height), 100)
+    img = Image.from_figure(fig, (width, height), dpi)
     plt.close(fig)
     return img
