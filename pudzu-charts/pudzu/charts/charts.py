@@ -1666,14 +1666,14 @@ def month_chart(
 class LineChartType(Enum):
     """Line Chart types."""
 
-    LINE, AREA_OVERLAYED, AREA_STACKED = range(3)
+    SIMPLE, STACKED, OVERLAYED = range(3)
 
 
 def line_chart(
     data,
     width,
     height,
-    type=LineChartType.LINE,
+    type=LineChartType.SIMPLE,
     xmin=None,
     xmax=None,
     ymin=None,
@@ -1710,7 +1710,7 @@ def line_chart(
     - colors (color/colors): colors to use for the lines [Vega palette]
     - grid (boolean): whether to include grid; optionally grid argument dict [True]
     - legend (boolean): whether to include a legend; optionally legend argument dict [False]
-    - return_figure (boolean): whether to return the figure rather than the image [False]
+    - return_figure (boolean): whether to return the figure and axes rather than the image [False]
     """
     import matplotlib.pyplot as plt
     from matplotlib.offsetbox import AnnotationBbox
@@ -1728,14 +1728,16 @@ def line_chart(
     # TODO: padding
     fig, ax = plt.subplots()
 
-    if type is LineChartType.LINE:
+    if type is LineChartType.SIMPLE:
         lines = ax.plot(data)
-    elif type is LineChartType.AREA_OVERLAYED:
+    elif type is LineChartType.STACKED:
+        lines = ax.stackplot(list(data.index), np.array(data).transpose().tolist())
+    elif type is LineChartType.OVERLAYED:
         lines = []
         for col in data.columns:
             lines.append(ax.fill_between(list(data.index), list(data[col])))
     else:
-        raise NotImplementedError
+        raise ValueError(f"Unrecognised chart type: {type}")
 
     if isinstance(data, pd.DataFrame):
         for line, label in zip(lines, data.columns):
@@ -1822,7 +1824,7 @@ def line_chart(
             ax.legend()
 
     if return_figure:
-        return fig
+        return fig, ax
 
     img = Image.from_figure(fig, (width, height), dpi)
     plt.close(fig)
