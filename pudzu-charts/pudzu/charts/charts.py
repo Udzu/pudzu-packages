@@ -1666,7 +1666,7 @@ def month_chart(
 class LineChartType(Enum):
     """Line Chart types."""
 
-    SIMPLE, STACKED, OVERLAYED = range(3)
+    SIMPLE, STACKED, STACKED_PERCENTAGE, OVERLAYED = range(4)
 
 
 def line_chart(
@@ -1725,8 +1725,14 @@ def line_chart(
         StrMethodFormatter,
     )
 
-    # TODO: padding
+    # TODO: padding?
     fig, ax = plt.subplots()
+
+    if type is LineChartType.STACKED_PERCENTAGE:
+        data = data.div(data.sum(axis=1), axis=0)
+        type = LineChartType.STACKED
+        if ylabels is ...:
+            ylabels = "{x:.0%}"
 
     if type is LineChartType.SIMPLE:
         lines = ax.plot(data)

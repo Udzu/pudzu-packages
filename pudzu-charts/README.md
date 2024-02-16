@@ -28,7 +28,7 @@ Five chart types are currently supported: **bar charts**, **time charts**, **gri
 
 ### Line charts
 
-**line_chart**: generate a line chart; supports stacked and overlayed area charts, as well as flexible coloring and labeling. Requires matplotlib.
+**line_chart**: generate a line chart; supports stacked, percentage stacked and overlayed area charts, as well as flexible coloring and labeling. Requires matplotlib.
 
 ![line chart example](images/nhs.jpg)
 
