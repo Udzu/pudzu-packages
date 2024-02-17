@@ -1687,6 +1687,7 @@ def line_chart(
     ylabel=None,
     title=None,
     colors=VegaPalette10,
+    plot_args=None,
     grid=True,
     legend=False,
     dpi=100,
@@ -1709,6 +1710,7 @@ def line_chart(
     - ylabel (string): y axis label [none]
     - title (string): title [none]
     - colors (color/colors): colors to use for the lines [Vega palette]
+    - plot_args (dict): optional arguments to pass to the relevant plot function [None]
     - grid (boolean/dict): whether to include grid; optionally grid argument dict [True]
     - legend (boolean/dict): whether to include a legend; optionally legend argument dict [False]
     - return_figure (boolean): whether to return the figure and axes rather than the image [False]
@@ -1716,7 +1718,6 @@ def line_chart(
     import matplotlib.pyplot as plt
     from matplotlib.offsetbox import AnnotationBbox
     from matplotlib.ticker import (
-        FixedFormatter,
         FixedLocator,
         Formatter,
         Locator,
@@ -1726,7 +1727,8 @@ def line_chart(
         StrMethodFormatter,
     )
 
-    # TODO: padding?
+    # TODO: padding
+    plot_args = plot_args or {}
     fig, ax = plt.subplots()
 
     if type is LineChartType.STACKED_PERCENTAGE:
@@ -1736,13 +1738,13 @@ def line_chart(
             ylabels = "{x:.0%}"
 
     if type is LineChartType.SIMPLE:
-        lines = ax.plot(data)
+        lines = ax.plot(data, **plot_args)
     elif type is LineChartType.STACKED:
-        lines = ax.stackplot(list(data.index), np.array(data).transpose().tolist())
+        lines = ax.stackplot(list(data.index), np.array(data).transpose().tolist(), **plot_args)
     elif type is LineChartType.OVERLAYED:
         lines = []
         for col in data.columns:
-            lines.append(ax.fill_between(list(data.index), list(data[col])))
+            lines.append(ax.fill_between(list(data.index), list(data[col]), **plot_args))
     else:
         raise ValueError(f"Unrecognised chart type: {type}")
 
@@ -1786,21 +1788,22 @@ def line_chart(
         elif isinstance(labels, str):
             formatter = StrMethodFormatter(labels)
         elif non_string_sequence(labels):
+            # text labels
             formatter = FuncFormatter(
                 lambda _, pos: labels[pos] if pos < len(labels) and isinstance(labels[pos], str) else None
             )
-            # following is very hacky, will probably need tweaking with use
+            # image labels (hacky)
             for loc, img in zip(axis.get_ticklocs(), labels):
                 if isinstance(img, Image.Image):
                     im = img.to_offsetimage()
-                    if axis is ax.xaxis:
-                        abox = AnnotationBbox(
-                            im, (loc, ax.get_ylim()[0]), frameon=False, xybox=(0, -16), boxcoords="offset points"
-                        )
-                    else:
-                        abox = AnnotationBbox(
-                            im, (ax.get_xlim()[0], loc), frameon=False, xybox=(-16, 0), boxcoords="offset points"
-                        )
+                    horiz = axis is ax.xaxis
+                    abox = AnnotationBbox(
+                        im,
+                        (loc, ax.get_ylim()[0]) if horiz else (ax.get_xlim()[0], loc),
+                        frameon=False,
+                        xybox=(0, -16) if horiz else (-16, 0),
+                        boxcoords="offset points",
+                    )
                     ax.add_artist(abox)
         elif labels is None:
             formatter = NullFormatter()
