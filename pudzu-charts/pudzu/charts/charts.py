@@ -1690,6 +1690,8 @@ def line_chart(
     plot_args=None,
     grid=True,
     legend=False,
+    padding=None,
+    pad_out=False,
     dpi=100,
     return_figure=False,
 ):
@@ -1713,6 +1715,9 @@ def line_chart(
     - plot_args (dict): optional arguments to pass to the relevant plot function [None]
     - grid (boolean/dict): whether to include grid; optionally grid argument dict [True]
     - legend (boolean/dict): whether to include a legend; optionally legend argument dict [False]
+    - padding (Padding): padding around figure (measured from axes) [default]
+    - pad_out (boolean): whether to exclude padding from the chart size [False]
+    - dpi [int]: matplotlib dpi resolution [100]
     - return_figure (boolean): whether to return the figure and axes rather than the image [False]
     """
     import matplotlib.pyplot as plt
@@ -1727,7 +1732,15 @@ def line_chart(
         StrMethodFormatter,
     )
 
-    # TODO: padding
+    if padding is not None:
+        padding = Padding(padding)
+
+    if pad_out:
+        if padding is None:
+            raise ValueError("pad_out can only be used with explicit padding")
+        width += padding.x
+        height += padding.y
+
     plot_args = plot_args or {}
     fig, ax = plt.subplots()
 
@@ -1833,6 +1846,11 @@ def line_chart(
             ax.legend(**legend)
         else:
             ax.legend()
+
+    if padding:
+        fig.subplots_adjust(
+            left=padding.l / width, bottom=padding.d / height, right=1 - padding.r / width, top=1 - padding.u / height
+        )
 
     if return_figure:
         return fig, ax
