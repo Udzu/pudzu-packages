@@ -12,7 +12,6 @@ from typing import Mapping, OrderedDict
 
 import numpy as np
 import pandas as pd
-from matplotlib.ticker import FuncFormatter
 from PIL import ImageColor
 from PIL.ImageDraw import ImageDraw
 from PIL.ImageFont import ImageFont
@@ -1724,6 +1723,7 @@ def line_chart(
     from matplotlib.offsetbox import AnnotationBbox
     from matplotlib.ticker import (
         FixedLocator,
+        FuncFormatter,
         Formatter,
         Locator,
         MultipleLocator,
