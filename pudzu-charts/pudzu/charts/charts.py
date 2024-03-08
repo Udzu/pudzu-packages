@@ -12,9 +12,7 @@ from typing import Mapping, OrderedDict
 
 import numpy as np
 import pandas as pd
-from PIL import ImageColor
-from PIL.ImageDraw import ImageDraw
-from PIL.ImageFont import ImageFont
+from PIL import ImageColor, ImageDraw, ImageFont
 from pudzu.dates import ApproximateDate, DateFilter, DatePrecision, DateRange
 from pudzu.pillar import (
     RGBA,
@@ -1694,7 +1692,7 @@ def line_chart(
     dpi=100,
     return_figure=False,
 ):
-    """Plot a line chart using matplotlib. [Work in progress]
+    """Plot a line chart using matplotlib.
 
     - data (pandas dataframe): table to plot
     - width (int): chart width
