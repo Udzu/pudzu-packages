@@ -1,4 +1,6 @@
 import bisect
+import collections
+import dataclasses
 import datetime
 import hashlib
 import importlib
@@ -20,8 +22,8 @@ from functools import partial, wraps
 from inspect import signature
 from math import ceil, floor, log10
 from time import sleep
-from types import ModuleType
-from typing import Iterable, Mapping, Sequence
+from types import ModuleType, UnionType
+from typing import Iterable, Mapping, Sequence, TypeVar, Type, Any, get_origin, get_args, Union
 from urllib.parse import urlparse
 
 from toolz import itemmap, keyfilter, merge_with
@@ -140,8 +142,24 @@ def register_import_hooks():
 # Classes
 
 
+class ValueBoxBlock:
+    """A helper class for temporarily overriding ValueBox values."""
+
+    def __init__(self, box, new_value):
+        self.box = box
+        self.new_value = new_value
+        self.old_value = None
+
+    def __enter__(self):
+        self.old_value = self.box.value
+        self.box.value = self.new_value
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.box.value = self.old_value
+
+
 class ValueBox(abc.Collection):
-    """A simple mutable container with a returning assignment operator."""
+    """A simple mutable container with returning and temporary assignment operators."""
 
     def __init__(self, value=None):
         self.value = value
@@ -165,12 +183,13 @@ class ValueBox(abc.Collection):
         return self.value
 
     def __lshift__(self, value):
+        """Returning assignment: (box << 2) == 2"""
         self.set(value)
         return value
 
     def __rrshift__(self, value):
-        self.set(value)
-        return value
+        """Temporary assignment: with (2 >> box): assert box() == 2"""
+        return ValueBoxBlock(self, value)
 
 
 class ThreadLocalBox(threading.local, ValueBox):
@@ -392,7 +411,7 @@ def unmake_sequence(v):
         return None
 
 
-def remove_duplicates(seq, key=lambda v: v, keep_last=False):
+def remove_duplicates(seq, key=lambda v: v, keep_last=False, factory=tuple):
     """Return an order preserving tuple copy containing items from an iterable, deduplicated
     based on the given key function."""
     d = OrderedDict()
@@ -402,7 +421,7 @@ def remove_duplicates(seq, key=lambda v: v, keep_last=False):
             del d[k]
         if keep_last or k not in d:
             d[k] = x
-    return tuple(d.values())
+    return factory(d.values())
 
 
 def first(iterable, default=None):
@@ -1274,3 +1293,66 @@ class switch:
 
 
 switch_predicates = partial(switch, predicates=True)
+
+
+# dataclasses
+
+T = TypeVar("T")
+
+
+def dataclass_from_json(cls: Type[T], j: Any) -> T:
+    """
+    Convert a JSON dict generated using dataclasses.asdict() back to a dataclass.
+    Supports dataclass fields with basic types as well as with Sequence, List, Tuple,
+    Mapping, Dict, Optional and Union.
+    """
+
+    if dataclasses.is_dataclass(cls):
+        if not isinstance(j, Mapping):
+            raise TypeError(f"Expected mapping corresponding to {cls}, got {j}")
+        fieldtypes = {f.name: f.type for f in dataclasses.fields(cls)}
+        return cls(
+            **{f: dataclass_from_json(fieldtypes[f], v) for f, v in j.items()}
+        )  # type: ignore[return-value]
+
+    elif get_origin(cls) in (collections.abc.Sequence, list):
+        if not isinstance(j, Sequence):
+            raise TypeError(f"Expected sequence corresponding to {cls}, got {j}")
+        sequence_type = get_args(cls)[0]
+        return [dataclass_from_json(sequence_type, v) for v in j]  # type: ignore[return-value]
+
+    elif get_origin(cls) in (collections.abc.Mapping, dict):
+        if not isinstance(j, Mapping):
+            raise TypeError(f"Expected mapping corresponding to {cls}, got {j}")
+        key_type, value_type = get_args(cls)
+        return {
+            dataclass_from_json(key_type, k): dataclass_from_json(value_type, v)
+            for k, v in j.items()
+        }  # type: ignore[return-value]
+
+    elif get_origin(cls) == tuple:
+        tuple_types = get_args(cls)
+        if not isinstance(j, Sequence):
+            raise TypeError(f"Expected sequence corresponding to {cls}, got {j}")
+        if len(tuple_types) == 2 and tuple_types[1] == Ellipsis:
+            tuple_types = (tuple_types[0],) * len(j)
+        if len(j) != len(tuple_types):
+            raise TypeError(f"Expected {len(tuple_types)} elements for {cls}, got {j}")
+        return tuple(
+            dataclass_from_json(tuple_type, v) for tuple_type, v in zip(tuple_types, j)
+        )  # type: ignore[return-value]
+
+    # handle Union[A, B]/Optional[A] and A | B cases respectively
+    elif get_origin(cls) in (Union, UnionType):
+        union_types = get_args(cls)
+        for union_type in union_types:
+            try:
+                return dataclass_from_json(union_type, j)  # type: ignore[no-any-return]
+            except Exception:
+                continue
+        raise TypeError(f"Expected value corresponding to one of {union_types}, got {j}")
+
+    else:
+        if not isinstance(j, cls):
+            raise TypeError(f"Expected {cls}, got {j}")
+        return j
