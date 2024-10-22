@@ -1024,9 +1024,11 @@ class _Image(Image.Image):  # pylint: disable=abstract-method
         return cls.from_array([[img] for img in column], **kwargs)
 
     @classmethod
-    def from_url(cls, url, filepath=None):
+    def from_url(cls, url, filepath=None, headers=None):
         """Create an image from a url, optionally saving it to a filepath."""
         HEADERS = {"User-Agent": "Mozilla/5.0"}
+        if headers is not None:
+            HEADERS.update(headers)
         uparse = urlparse(url)
         logger.debug("Reading image from %s", url)
         if uparse.scheme == "":
@@ -1046,17 +1048,18 @@ class _Image(Image.Image):  # pylint: disable=abstract-method
                 f.write(content)
             with open(filepath + ".source", "w", encoding="utf-8") as f:
                 print(url, file=f)
+                print(f"Headers: {HEADERS}", file=f)
             return Image.open(filepath)
 
     @classmethod
-    def from_url_with_cache(cls, url, cache_dir="cache", filename=None):
+    def from_url_with_cache(cls, url, cache_dir="cache", filename=None, headers=None):
         """Create an image from a url, using a file cache."""
         filepath = os.path.join(cache_dir, filename or url_to_filepath(url))
         if os.path.isfile(filepath):
             logger.debug("Loading cached image at %s", filepath)
             img = Image.open(filepath)
         else:
-            img = cls.from_url(url, filepath)
+            img = cls.from_url(url, filepath=filepath, headers=headers)
         return img
 
     @classmethod
@@ -1575,7 +1578,9 @@ def font(name, size, bold=False, italics=False, **kwargs):
         ["", "i", "bd", "bi"],
         ["", "i", "b", "z"],
         ["", "Oblique", "Bold", "BoldOblique"],
+        ["", "Italic", "Bold", "BoldItalic"],
         ["", "_Oblique", "_Bold", "_BoldOblique"],
+        ["-Regular", "-Italic", "-Bold", "-BoldItalic"],
     ]
     variants = (
         [name]
@@ -1607,10 +1612,17 @@ def font_family(*names):
     return None
 
 
+
 arial = font_family("arial")
 calibri = font_family("calibri")
 verdana = font_family("verdana")
-sans = font_family("arial", "/usr/share/fonts/truetype/freefont/FreeSans")
+
+liberation_serif = font_family("LiberationSerif")
+liberation_sans = font_family("LiberationSans")
+
+sans = font_family("arial", "FreeSans")
+serif = font_family("times", "FreeSerif")
+
 
 # Shapes
 
