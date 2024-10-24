@@ -1024,7 +1024,7 @@ class _Image(Image.Image):  # pylint: disable=abstract-method
         return cls.from_array([[img] for img in column], **kwargs)
 
     @classmethod
-    def from_url(cls, url, filepath=None, headers=None):
+    def from_url(cls, url, filepath=None, headers=None, sleep_ms=0):
         """Create an image from a url, optionally saving it to a filepath."""
         HEADERS = {"User-Agent": "Mozilla/5.0"}
         if headers is not None:
@@ -1038,6 +1038,7 @@ class _Image(Image.Image):  # pylint: disable=abstract-method
             content = (
                 requests.get(url, headers=HEADERS).content if requests else urlopen(url).read()
             )
+            time.sleep(sleep_ms/1000)
         if filepath is None:
             fh = BytesIO(content)
             return Image.open(fh)
@@ -1052,14 +1053,14 @@ class _Image(Image.Image):  # pylint: disable=abstract-method
             return Image.open(filepath)
 
     @classmethod
-    def from_url_with_cache(cls, url, cache_dir="cache", filename=None, headers=None):
+    def from_url_with_cache(cls, url, cache_dir="cache", filename=None, headers=None, sleep_ms=0):
         """Create an image from a url, using a file cache."""
         filepath = os.path.join(cache_dir, filename or url_to_filepath(url))
         if os.path.isfile(filepath):
             logger.debug("Loading cached image at %s", filepath)
             img = Image.open(filepath)
         else:
-            img = cls.from_url(url, filepath=filepath, headers=headers)
+            img = cls.from_url(url, filepath=filepath, headers=headers, sleep_ms=sleep_ms)
         return img
 
     @classmethod
