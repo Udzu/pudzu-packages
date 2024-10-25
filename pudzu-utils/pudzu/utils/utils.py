@@ -7,6 +7,7 @@ import importlib
 import importlib.abc
 import importlib.util
 import itertools
+import json
 import logging
 import math
 import operator as op
@@ -1356,3 +1357,68 @@ def dataclass_from_json(cls: Type[T], j: Any) -> T:
         if not isinstance(j, cls):
             raise TypeError(f"Expected {cls}, got {j}")
         return j
+
+
+def dataclass_to_json_schema(cls: type) -> dict[str, Any]:
+    """
+    Convert a dataclass into a JSON schema.
+    Supports dataclass fields with basic types as well as with Sequence, List, Tuple,
+    Optional and Union.
+    """
+    schema = {}
+    schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
+    defs = {}
+    schema.update(_json_schema_defn(cls, defs))
+    schema["$defs"] = defs
+    return schema
+
+
+def _json_schema_defn(cls: type, defs: dict[str, Any]) -> dict[str, Any]:
+    basic_types = {
+        bool: "boolean",
+        int: "integer",
+        float: "number",
+        str: "string",
+        type(None): "null",
+    }
+
+    if cls in basic_types:
+        return {"type": basic_types[cls]}
+
+    elif dataclasses.is_dataclass(cls):
+        if cls.__name__ not in defs:
+            defs[cls.__name__] = {
+                "type": "object",
+                "properties": {
+                    f.name: _json_schema_defn(f.type, defs) for f in dataclasses.fields(cls)
+                },
+                "required": [
+                    f.name
+                    for f in dataclasses.fields(cls)
+                    if f.default is dataclasses.MISSING and f.default_factory is dataclasses.MISSING
+                ],
+            }
+        return {"$ref": f"#/$defs/{cls.__name__}"}
+
+    elif get_origin(cls) in (collections.abc.Sequence, list):
+        sequence_type = get_args(cls)[0]
+        return {"type": "array", "items": _json_schema_defn(sequence_type, defs)}
+
+    # TODO: dict
+
+    elif get_origin(cls) in (Union, UnionType):
+        union_types = get_args(cls)
+        return {"anyOf": [_json_schema_defn(t, defs) for t in union_types]}
+
+    elif get_origin(cls) == tuple:
+        tuple_types = get_args(cls)
+        if len(tuple_types) == 2 and tuple_types[1] == Ellipsis:
+            return {"type": "array", "items": _json_schema_defn(tuple_types[0], defs)}
+        else:
+            return {
+                "type": "array",
+                "prefixItems": [_json_schema_defn(t, defs) for t in tuple_types],
+            }
+
+    else:
+        raise TypeError(f"Unsupported type {cls}")
