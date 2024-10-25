@@ -1367,7 +1367,7 @@ def dataclass_to_json_schema(cls: type) -> dict[str, Any]:
     """
     Convert a dataclass into a JSON schema.
     Supports dataclass fields with basic types as well as with Sequence, List, Tuple,
-    Optional, Union and Annotated.
+    Mapping, Dict, Optional, Union and Annotated (for property descriptions).
     """
     schema = {}
     schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
@@ -1413,7 +1413,14 @@ def _json_schema_defn(cls: type, defs: dict[str, Any]) -> dict[str, Any]:
         sequence_type = get_args(cls)[0]
         return {"type": "array", "items": _json_schema_defn(sequence_type, defs)}
 
-    # TODO: dict
+    elif get_origin(cls) in (collections.abc.Mapping, dict):
+        key_type, value_type = get_args(cls)
+        if key_type is not str:
+            raise TypeError(f"Unsupported non-string mapping key type: {key_type}")
+        return {
+            "type": "object",
+            "patternProperties": {"^.*$": _json_schema_defn(value_type, defs)},
+        }
 
     elif get_origin(cls) in (Union, UnionType):
         union_types = get_args(cls)
