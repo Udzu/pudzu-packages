@@ -16,6 +16,7 @@ import random
 import re
 import sys
 import threading
+import typing
 import unicodedata
 from collections import Counter, OrderedDict, abc
 from enum import Enum
@@ -1305,7 +1306,7 @@ def dataclass_from_json(cls: Type[T], j: Any) -> T:
     """
     Convert a JSON dict generated using dataclasses.asdict() back to a dataclass.
     Supports dataclass fields with basic types as well as with Sequence, List, Tuple,
-    Mapping, Dict, Optional and Union.
+    Mapping, Dict, Optional, Union and Annotated.
     """
 
     if dataclasses.is_dataclass(cls):
@@ -1353,6 +1354,9 @@ def dataclass_from_json(cls: Type[T], j: Any) -> T:
                 continue
         raise TypeError(f"Expected value corresponding to one of {union_types}, got {j}")
 
+    elif get_origin(cls) == typing.Annotated:
+        return dataclass_from_json(get_args(cls)[0], j)
+
     else:
         if not isinstance(j, cls):
             raise TypeError(f"Expected {cls}, got {j}")
@@ -1363,7 +1367,7 @@ def dataclass_to_json_schema(cls: type) -> dict[str, Any]:
     """
     Convert a dataclass into a JSON schema.
     Supports dataclass fields with basic types as well as with Sequence, List, Tuple,
-    Optional and Union.
+    Optional, Union and Annotated.
     """
     schema = {}
     schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
@@ -1387,6 +1391,7 @@ def _json_schema_defn(cls: type, defs: dict[str, Any]) -> dict[str, Any]:
 
     elif dataclasses.is_dataclass(cls):
         if cls.__name__ not in defs:
+
             defs[cls.__name__] = {
                 "type": "object",
                 "properties": {
@@ -1398,6 +1403,10 @@ def _json_schema_defn(cls: type, defs: dict[str, Any]) -> dict[str, Any]:
                     if f.default is dataclasses.MISSING and f.default_factory is dataclasses.MISSING
                 ],
             }
+            for f in dataclasses.fields(cls):
+                if f.default is not dataclasses.MISSING:
+                    defs[cls.__name__]["properties"][f.name]["default"] = f.default
+
         return {"$ref": f"#/$defs/{cls.__name__}"}
 
     elif get_origin(cls) in (collections.abc.Sequence, list):
@@ -1419,6 +1428,12 @@ def _json_schema_defn(cls: type, defs: dict[str, Any]) -> dict[str, Any]:
                 "type": "array",
                 "prefixItems": [_json_schema_defn(t, defs) for t in tuple_types],
             }
+
+    elif get_origin(cls) == typing.Annotated:
+        annotated_type, description = get_args(cls)
+        defn = _json_schema_defn(annotated_type, defs)
+        defn["description"] = description
+        return defn
 
     else:
         raise TypeError(f"Unsupported type {cls}")
