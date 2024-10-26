@@ -1306,7 +1306,7 @@ def dataclass_from_json(cls: Type[T], j: Any) -> T:
     """
     Convert a JSON dict generated using dataclasses.asdict() back to a dataclass.
     Supports dataclass fields with basic types as well as with Sequence, List, Tuple,
-    Mapping, Dict, Optional, Union and Annotated.
+    Mapping, Dict, Optional, Union, Literal and Annotated.
     """
 
     if dataclasses.is_dataclass(cls):
@@ -1317,13 +1317,15 @@ def dataclass_from_json(cls: Type[T], j: Any) -> T:
             **{f: dataclass_from_json(fieldtypes[f], v) for f, v in j.items()}
         )  # type: ignore[return-value]
 
-    elif get_origin(cls) in (collections.abc.Sequence, list):
+    origin = get_origin(cls)
+
+    if origin in (collections.abc.Sequence, list):
         if not isinstance(j, Sequence):
             raise TypeError(f"Expected sequence corresponding to {cls}, got {j}")
         sequence_type = get_args(cls)[0]
         return [dataclass_from_json(sequence_type, v) for v in j]  # type: ignore[return-value]
 
-    elif get_origin(cls) in (collections.abc.Mapping, dict):
+    elif origin in (collections.abc.Mapping, dict):
         if not isinstance(j, Mapping):
             raise TypeError(f"Expected mapping corresponding to {cls}, got {j}")
         key_type, value_type = get_args(cls)
@@ -1332,7 +1334,7 @@ def dataclass_from_json(cls: Type[T], j: Any) -> T:
             for k, v in j.items()
         }  # type: ignore[return-value]
 
-    elif get_origin(cls) == tuple:
+    elif origin == tuple:
         tuple_types = get_args(cls)
         if not isinstance(j, Sequence):
             raise TypeError(f"Expected sequence corresponding to {cls}, got {j}")
@@ -1345,7 +1347,7 @@ def dataclass_from_json(cls: Type[T], j: Any) -> T:
         )  # type: ignore[return-value]
 
     # handle Union[A, B]/Optional[A] and A | B cases respectively
-    elif get_origin(cls) in (Union, UnionType):
+    elif origin in (Union, UnionType):
         union_types = get_args(cls)
         for union_type in union_types:
             try:
@@ -1354,7 +1356,12 @@ def dataclass_from_json(cls: Type[T], j: Any) -> T:
                 continue
         raise TypeError(f"Expected value corresponding to one of {union_types}, got {j}")
 
-    elif get_origin(cls) == typing.Annotated:
+    elif origin == typing.Literal:
+        if not j in get_args(cls):
+            raise TypeError(f"Expected one of {get_args(cls)}, got {j}")
+        return j
+
+    elif origin == typing.Annotated:
         return dataclass_from_json(get_args(cls)[0], j)
 
     else:
@@ -1367,7 +1374,7 @@ def dataclass_to_json_schema(cls: type) -> dict[str, Any]:
     """
     Convert a dataclass into a JSON schema.
     Supports dataclass fields with basic types as well as with Sequence, List, Tuple,
-    Mapping, Dict, Optional, Union and Annotated (for property descriptions).
+    Mapping, Dict, Optional, Union, Literal and Annotated (for property descriptions).
     """
     schema = {}
     schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
@@ -1409,11 +1416,13 @@ def _json_schema_defn(cls: type, defs: dict[str, Any]) -> dict[str, Any]:
 
         return {"$ref": f"#/$defs/{cls.__name__}"}
 
-    elif get_origin(cls) in (collections.abc.Sequence, list):
+    origin = get_origin(cls)
+
+    if origin in (collections.abc.Sequence, list):
         sequence_type = get_args(cls)[0]
         return {"type": "array", "items": _json_schema_defn(sequence_type, defs)}
 
-    elif get_origin(cls) in (collections.abc.Mapping, dict):
+    elif origin in (collections.abc.Mapping, dict):
         key_type, value_type = get_args(cls)
         if key_type is not str:
             raise TypeError(f"Unsupported non-string mapping key type: {key_type}")
@@ -1422,11 +1431,11 @@ def _json_schema_defn(cls: type, defs: dict[str, Any]) -> dict[str, Any]:
             "patternProperties": {"^.*$": _json_schema_defn(value_type, defs)},
         }
 
-    elif get_origin(cls) in (Union, UnionType):
+    elif origin in (Union, UnionType):
         union_types = get_args(cls)
         return {"anyOf": [_json_schema_defn(t, defs) for t in union_types]}
 
-    elif get_origin(cls) == tuple:
+    elif origin == tuple:
         tuple_types = get_args(cls)
         if len(tuple_types) == 2 and tuple_types[1] == Ellipsis:
             return {"type": "array", "items": _json_schema_defn(tuple_types[0], defs)}
@@ -1436,7 +1445,12 @@ def _json_schema_defn(cls: type, defs: dict[str, Any]) -> dict[str, Any]:
                 "prefixItems": [_json_schema_defn(t, defs) for t in tuple_types],
             }
 
-    elif get_origin(cls) == typing.Annotated:
+    elif origin == typing.Literal:
+        return {
+            "enum": get_args(cls)
+        }
+
+    elif origin == typing.Annotated:
         annotated_type, description = get_args(cls)
         defn = _json_schema_defn(annotated_type, defs)
         defn["description"] = description
