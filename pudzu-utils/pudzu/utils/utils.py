@@ -1299,8 +1299,6 @@ switch_predicates = partial(switch, predicates=True)
 
 # dataclasses
 
-# TODO: support Enums
-
 T = TypeVar("T")
 
 
@@ -1308,11 +1306,11 @@ def dataclass_from_dict(cls: Type[T], j: Any, strict: bool = False) -> T:
     """
     Convert a dict, such as one generated using dataclasses.asdict(), to a dataclass.
     Supports dataclass fields with basic types, as well as nested dataclasses and
-    Sequence, List, Tuple, Mapping, Dict, Optional, Union, Literal and Annotated types.
+    Sequence, List, Tuple, Mapping, Dict, Optional, Union, Literal, Enum and Annotated types.
 
     :param cls: Type to convert to.
     :param j: Value to convert.
-    :param strict: Don't ignore additional dataclass properties.
+    :param strict: Disallow additional dataclass properties.
     :return: Converted value.
     """
 
@@ -1374,6 +1372,11 @@ def dataclass_from_dict(cls: Type[T], j: Any, strict: bool = False) -> T:
     elif origin == typing.Annotated:
         return dataclass_from_dict(get_args(cls)[0], j)
 
+    elif isinstance(cls, type) and issubclass(cls, Enum):
+        if j not in cls.__members__:
+            raise TypeError(f"Expected {cls} label, got {j}")
+        return cls[j]
+
     else:
         if not isinstance(j, cls):
             raise TypeError(f"Expected {cls}, got {j}")
@@ -1385,7 +1388,7 @@ def dataclass_to_json_schema(cls: type, strict: bool = False) -> dict[str, Any]:
     Convert a dataclass (or other Python class) into a JSON schema. Data that
     satisfies the schema can be converted into the class using `dataclass_from_dict`.
     Supports dataclass fields with basic types, as well as nested dataclasses and
-    Sequence, List, Tuple, Mapping, Dict, Optional, Union, Literal and Annotated types
+    Sequence, List, Tuple, Mapping, Dict, Optional, Union, Literal, Enum and Annotated types
     (the last of which are used for property descriptions).
 
     :param cls: Class to generate a schema for.
@@ -1465,6 +1468,9 @@ def dataclass_to_json_schema(cls: type, strict: bool = False) -> dict[str, Any]:
             defn = _json_schema(annotated_type)
             defn["description"] = description
             return defn
+
+        elif isinstance(cls, type) and issubclass(cls, Enum):
+            return {"enum": list(cls.__members__)}
 
         else:
             raise TypeError(f"Unsupported type {cls}")
